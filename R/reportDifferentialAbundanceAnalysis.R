@@ -27,6 +27,7 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
     stop(paste0("unable to find ", daa_filename))
   }
   differential_abundance_analysis <- readRDS(daa_filename)
+  group_feature_label <- differential_abundance_analysis$group_feature_label
 
   analyses <- nameVector(c("Assignment", "Profiling"))
   lapply(analyses, function(analysis) {
@@ -34,6 +35,9 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
     group_feature_label <- differential_abundance_analysis$group_feature_label
     daa <-
       differential_abundance_analysis$differential_abundance_analysis[[analysis]]
+
+    # Get DAA in export-ready format.
+    export_daa <- differentialAbundanceAnalysis(experiment, level = analysis)
 
     # Join data with sample name and sample features.
     figure_data <- cell_counts %>%
@@ -70,7 +74,8 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
       }
 
       # Table: Result of differential analysis.
-      feature_report[["analysis_results"]] <- list(data = feature_top_tags)
+      feature_report[["analysis_results"]] <-
+        list(data = export_daa[[feature_name]])
 
       # Figure: Volcano plot (if feature only has two values).
       if ("logFC" %in% colnames(feature_top_tags)) {

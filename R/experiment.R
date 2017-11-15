@@ -132,23 +132,31 @@ differentialAbundanceAnalysis <- function(experiment, level = "Assignment") {
   if (!(level %in% names(daa))) {
     stop("required level not found in differential abundance analysis")
   }
-
   daa <- daa[[level]]
+
+  # Find feature values.
+  feature_values <- lapply(nameVector(names(daa)), function(feature_name) {
+    unique(experiment$sample_features[[feature_name]])
+  })
   # Convert feature IDs to names.
   m <-
     match(as.numeric(gsub("^feature_", "", names(daa))),
           experiment$features$FeatureId)
   names(daa) <- experiment$features$FeatureName[m]
+  names(feature_values) <- experiment$features$FeatureName[m]
 
   # Convert tables to tibbles and only keep p-value and FDR columns, and logFC for
   # features with two values.
-  lapply(daa, function(tab) {
-    tab <- as.data.frame(tab) %>%
+  lapply(nameVector(names(daa)), function(feature_name) {
+    tab <- as.data.frame(daa[[feature_name]]) %>%
       tibble::rownames_to_column("CellSubset")
     if ("logFC" %in% colnames(tab)) {
-      dplyr::select(tab, CellSubset, logFC, PValue, FDR)
+      cols <- c("CellSubset", "logFC", "PValue", "FDR")
     } else {
-      dplyr::select(tab, CellSubset, PValue, FDR)
+      cols <- c("CellSubset", "PValue", "FDR")
     }
+    cols <- c(cols, paste0("median_", feature_values[[feature_name]]))
+
+    tab[, cols]
   })
 }

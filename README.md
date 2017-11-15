@@ -206,23 +206,24 @@ Finally, you can access the differential abundance analysis results:
 [1] "patient"   "type"      "condition" "timepoint"
 ```
 
-Astrolabe runs the analysis for each of the features you supplied during experiment setup. Each of these include the P-values and FDR for each cell subset:
+Astrolabe runs the analysis for each of the features you supplied during experiment setup. Each of these include the P-values, FDR, and feature value medians for each cell subset:
 
 ```
 > daa$condition
-                           CellSubset    PValue       FDR
-1                         Granulocyte 0.8036136 0.9797192
-2                       CD16+ NK Cell 0.8036977 0.9797192
-3                       CD16- NK Cell 0.8392148 0.9797192
-4  CD141+ Conventional Dendritic Cell 0.8744914 0.9797192
-5                   T Cell_unassigned 0.9075786 0.9797192
-6                              B Cell 0.9178205 0.9797192
-7                  Myeloid_unassigned 0.9195956 0.9797192
-8                         CD4+ T Cell 0.9392515 0.9797192
-9                         CD8+ T Cell 0.9397369 0.9797192
-10                    Root_unassigned 0.9407390 0.9797192
-11                     CD14+ Monocyte 0.9610064 0.9797192
-12        Plasmacytoid Dendritic Cell 0.9711668 0.9797192
-13                     CD16+ Monocyte 0.9758730 0.9797192
-14                           Basophil 0.9797192 0.9797192
+> daa$condition
+                           CellSubset    PValue       FDR median_anti ige median_media median_peanut extract
+1                   T Cell_unassigned 0.1248214 0.9058288    0.0506369973 0.0493739530          4.847519e-02
+2                     Root_unassigned 0.2907044 0.9058288    0.0056848426 0.0056272949          5.843414e-03
+3                         Granulocyte 0.4423689 0.9058288    0.1092210834 0.0830771861          1.365757e-01
+4         Plasmacytoid Dendritic Cell 0.4483833 0.9058288    0.0048429066 0.0042607659          4.857075e-03
+5                         CD4+ T Cell 0.5454668 0.9058288    0.2989413963 0.3207483271          3.111650e-01
+6                         CD8+ T Cell 0.5575078 0.9058288    0.1819280851 0.1982661806          1.906808e-01
+7                              B Cell 0.6167987 0.9058288    0.0448034615 0.0340524660          4.073054e-02
+8                      CD16+ Monocyte 0.7515697 0.9058288    0.0106419480 0.0108713938          1.169913e-02
+9                      CD14+ Monocyte 0.7838902 0.9058288    0.1333721631 0.1580286985          1.458530e-01
+10                           Basophil 0.7944606 0.9058288    0.0233674522 0.0246680809          2.144130e-02
+11                      CD16- NK Cell 0.7958336 0.9058288    0.0069009109 0.0055712110          6.395491e-03
+12                 Myeloid_unassigned 0.8383330 0.9058288    0.0498024335 0.0457445240          4.446624e-02
+13                      CD16+ NK Cell 0.8411267 0.9058288    0.0002580689 0.0003215008          8.402538e-05
+14 CD141+ Conventional Dendritic Cell 0.9503421 0.9503421    0.0020229537 0.0018712104          2.828895e-03
 ```
