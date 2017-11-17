@@ -66,11 +66,15 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
         tibble::rownames_to_column(feature_top_tags, "CellSubset")
       cell_subset_labels <- feature_top_tags$CellSubset
 
-      # Whether to include line plots (if sample features include patient as a
-      # grouping feature).
+      # Whether to include line plots: sample has a grouping feature, and that
+      # feature varies across current feature.
       include_line_plots <- FALSE
       if (!is.null(group_feature_label)) {
-        include_line_plots <- feature_r_name != group_feature_label
+        feature_pairs <-
+          unique(figure_data[, c(feature_r_name, group_feature_label)])
+        include_line_plots <-
+          nrow(feature_pairs) >
+          length(unique(figure_data[[group_feature_label]]))
       }
 
       # Table: Result of differential analysis.
@@ -133,8 +137,11 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
         # Generate line plot, using the box_plot parameters as base.
         if (include_line_plots) {
           line_plot <- box_plot
+          line_plot_data <- cell_subset_data %>%
+            dplyr::group_by_(group_feature_label, feature_r_name) %>%
+            dplyr::summarize(Frequency = median(Frequency))
           line_plot$plt <-
-            ggplot(cell_subset_data,
+            ggplot(line_plot_data,
                    aes_string(x = feature_r_name, y = "Frequency")) +
             geom_line(aes_string(group = group_feature_label)) +
             scale_y_continuous(labels = scales::percent) +
