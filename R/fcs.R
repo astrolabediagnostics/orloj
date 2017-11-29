@@ -14,7 +14,8 @@ orloj_bead_channel_names <-
 # Debris cell assignments.
 astrolabe_debris_labels <-
   c(
-    "Debris"
+    "Debris",
+    "Root_unassigned"
   )
 
 # FCS File Interaction --------------------------------------------------------

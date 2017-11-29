@@ -90,19 +90,7 @@ getCellCounts <- function(aggregate_statistics, analysis) {
   if (analysis == "Assignment") {
     dplyr::filter(subset_cell_counts, Parent == "Assignment")
   } else if (analysis == "Profiling") {
-    assignment_labels <-
-      unique(dplyr::filter(subset_cell_counts,
-                           Parent == "Assignment")$CellSubset)
-    terminal_labels <-
-      assignment_labels[!(assignment_labels %in% subset_cell_counts$Parent)]
-
-    rbind(
-      dplyr::filter(subset_cell_counts,
-                    Parent == "Assignment",
-                    CellSubset %in% terminal_labels),
-      dplyr::filter(subset_cell_counts,
-                    Parent %in% assignment_labels)
-    )
+    dplyr::filter(subset_cell_counts, Parent == "Profile")
   } else {
     stop("Unsupposed analysis type")
   }

@@ -10,7 +10,6 @@ loadExperiment <- function(experiment_path) {
   experiment <- readRDS(file.path(experiment_path, "config.RDS"))
 
   experiment$astrolabe_path <- NULL
-  experiment$data_path <- NULL
   experiment$samples_path <- NULL
   experiment$analysis_path <- file.path(experiment_path, "analysis")
   experiment$reports_path <- file.path(experiment_path, "reports")
@@ -54,10 +53,12 @@ experimentSummary <- function(experiment) {
 #' @param level Cell subset level. Currently supported levels are "Assignment"
 #' and "Profiling".
 #' @return Cell subset counts for that level.
+#' @export
 experimentCellSubsetCounts <- function(experiment, level = "Assignment") {
-  if (!(level %in% c("Assignment", "Profile"))) {
+  if (!(level %in% c("Assignment", "Profiling"))) {
     stop("level is not \"Assignment\" or \"Profiling\"")
   }
+  if (level == "Profiling") level = "Profile"
 
   aggregate_statistics_filename <-
     file.path(experiment$analysis_path, "combine_aggregate_statistics.RDS")
@@ -83,11 +84,13 @@ experimentCellSubsetCounts <- function(experiment, level = "Assignment") {
 #' @param level Cell subset level. Currently supported levels are "Assignment"
 #' and "Profiling".
 #' @return Cell subset channel statistics for that level.
+#' @export
 experimentCellSubsetChannelStatistics <- function(experiment,
                                                   level = "Assignment") {
-  if (!(level %in% c("Assignment", "Profile"))) {
+  if (!(level %in% c("Assignment", "Profiling"))) {
     stop("level is not \"Assignment\" or \"Profiling\"")
   }
+  if (level == "Profiling") level = "Profile"
 
   aggregate_statistics_filename <-
     file.path(experiment$analysis_path, "combine_aggregate_statistics.RDS")

@@ -81,18 +81,22 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
       feature_report[["analysis_results"]] <-
         list(data = export_daa[[feature_name]])
 
-      # Figure: Volcano plot (if feature only has two values).
+      # Figure: Volcano plot
+      feature_top_tags$negLog10Fdr = -log10(feature_top_tags$FDR)
       if ("logFC" %in% colnames(feature_top_tags)) {
-        feature_top_tags$negLog10Fdr = -log10(feature_top_tags$FDR)
-        volcano_plt_list <-
-          plotScatterPlot(feature_top_tags,
-                          x = "logFC",
-                          y = "negLog10Fdr")
-        volcano_plt_list$plt <- volcano_plt_list$plt +
-          ggrepel::geom_text_repel(aes(label = CellSubset))
-
-        feature_report[["volcano"]] <- volcano_plt_list
+        volcano_plot_x <- "logFC"
+      } else if ("maxLogFc" %in% colnames(feature_top_tags)) {
+        volcano_plot_x <- "maxLogFc"
+      } else {
+        stop("feature_top_tags does not include logFC or maxLogFc")
       }
+      volcano_plt_list <-
+        plotScatterPlot(feature_top_tags,
+                        x = volcano_plot_x,
+                        y = "negLog10Fdr")
+      volcano_plt_list$plt <- volcano_plt_list$plt +
+        ggrepel::geom_text_repel(aes(label = CellSubset))
+      feature_report[["volcano"]] <- volcano_plt_list
 
       # Figures: Line plots (for non-patient features in experiments that have
       # patient), box plots, and bar plots.

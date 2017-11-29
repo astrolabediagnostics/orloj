@@ -3,6 +3,8 @@
 export(addBackticks)
 export(calculateFcsDigest)
 export(differentialAbundanceAnalysis)
+export(experimentCellSubsetChannelStatistics)
+export(experimentCellSubsetCounts)
 export(experimentSummary)
 export(exportPlot)
 export(exportReport)
