@@ -102,7 +102,7 @@ fcsExprs <- function(sample, keep_debris = FALSE) {
     # Incorporate terminal subset profiling.
     if (!is.null(sample$terminal_subset_profiling)) {
       exprs$Profile <- exprs$Assignment
-      exprs$Profile[exprs$Assignment != "Debris"] <-
+      exprs$Profile[!(exprs$Assignment %in% astrolabe_debris_labels)] <-
         sample$terminal_subset_profiling$Profile
       exprs$Profile[is.na(exprs$Profile)] <-
         exprs$Assignment[is.na(exprs$Profile)]
