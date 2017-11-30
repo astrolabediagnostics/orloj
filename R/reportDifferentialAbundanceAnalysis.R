@@ -62,6 +62,9 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
 
       # Get analysis results for this feature.
       feature_top_tags <- daa[[feature_r_name]]$table
+      if (is.null(feature_top_tags)) {
+        return(feature_top_tags);
+      }
       feature_top_tags <-
         tibble::rownames_to_column(feature_top_tags, "CellSubset")
       cell_subset_labels <- feature_top_tags$CellSubset

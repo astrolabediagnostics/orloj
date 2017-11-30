@@ -151,15 +151,19 @@ differentialAbundanceAnalysis <- function(experiment, level = "Assignment") {
   # Convert tables to tibbles and only keep p-value and FDR columns, and logFC for
   # features with two values.
   lapply(nameVector(names(daa)), function(feature_name) {
-    tab <- as.data.frame(daa[[feature_name]]) %>%
-      tibble::rownames_to_column("CellSubset")
-    if ("logFC" %in% colnames(tab)) {
-      cols <- c("CellSubset", "logFC", "PValue", "FDR")
+    if (is.null(daa[[feature_name]])) {
+      NULL
     } else {
-      cols <- c("CellSubset", "PValue", "FDR")
+      tab <- as.data.frame(daa[[feature_name]]) %>%
+        tibble::rownames_to_column("CellSubset")
+      if ("logFC" %in% colnames(tab)) {
+        cols <- c("CellSubset", "logFC", "PValue", "FDR")
+      } else {
+        cols <- c("CellSubset", "PValue", "FDR")
+      }
+      cols <- c(cols, paste0("median_", feature_values[[feature_name]]))
+      
+      tab[, cols]
     }
-    cols <- c(cols, paste0("median_", feature_values[[feature_name]]))
-
-    tab[, cols]
   })
 }
