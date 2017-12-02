@@ -11,12 +11,13 @@ orloj_bead_channel_names <-
     "Lu175Di"
   )
 
-# Debris cell assignments.
-astrolabe_debris_labels <-
-  c(
-    "Debris",
-    "Root_unassigned"
-  )
+#' Astrolabe debris labels.
+#' 
+#' @return Vector of Astrolabe debris labels.
+#' @export
+astrolabeDebrisLabels <- function() {
+  c("Debris", "Root_unassigned")
+}
 
 # FCS File Interaction --------------------------------------------------------
 
