@@ -29,7 +29,8 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
   differential_abundance_analysis <- readRDS(daa_filename)
   group_feature_label <- differential_abundance_analysis$group_feature_label
 
-  analyses <- nameVector(c("Assignment", "Profiling"))
+  analyses <-
+    names(differential_abundance_analysis$differential_abundance_analysis)
   lapply(analyses, function(analysis) {
     cell_counts <- getCellCounts(aggregate_statistics, analysis)
     group_feature_label <- differential_abundance_analysis$group_feature_label
