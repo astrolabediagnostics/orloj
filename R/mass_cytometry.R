@@ -70,20 +70,27 @@ massTransformMassChannels <- function(sample, cofactor = 5) {
 #' @param sample An Astrolabe sample.
 #' @param bead_percentile Clusters where at least one of the bead channels is
 #' below this threshold are non-bead clusters.
+#' @param min_n Minimum number of events in order to try and detect beads.
 #' @return Sample, with additional non_bead_indices and non_bead_message.
 #' fields.
-massFindNonBeadEvents <- function(sample, bead_percentile = 0.99) {
+massFindNonBeadEvents <- function(sample,
+                                  bead_percentile = 0.99,
+                                  min_n = 200) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   n_bead_channels <- length(orloj_bead_channel_names)
   bead_channel_indices <- match(orloj_bead_channel_names, sample$parameter_name)
 
+  # Default values (no bead removal).
+  bead_channel_thresholds <- NA
+  non_bead_indices <- seq(nrow(sample$exprs))
+
   if (any(is.na(bead_channel_indices))) {
     # We require all four channels in order to detect beads. If any are missing,
     # we assume no beads.
-    bead_channel_thresholds <- NA
-    non_bead_indices <- seq(nrow(sample$exprs))
     non_bead_message <- "At least one bead channel is missing from data"
+  } else if (nrow(fcsExprs(sample)) < min_n) {
+    non_bead_message <- paste0("File has less than ", min_n, " events")
   } else {
     # Get bead expression data.
     bead_exprs <- fcsExprs(sample)[, bead_channel_indices]

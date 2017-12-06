@@ -4,13 +4,15 @@
 \alias{massFindNonBeadEvents}
 \title{Find the indices of non-bead events.}
 \usage{
-massFindNonBeadEvents(sample, bead_percentile = 0.99)
+massFindNonBeadEvents(sample, bead_percentile = 0.99, min_n = 200)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}
 
 \item{bead_percentile}{Clusters where at least one of the bead channels is
 below this threshold are non-bead clusters.}
+
+\item{min_n}{Minimum number of events in order to try and detect beads.}
 }
 \value{
 Sample, with additional non_bead_indices and non_bead_message.
