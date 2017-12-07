@@ -4,7 +4,8 @@
 # All possible Astrolabe analyses.
 astrolabe_analyses <- c(
   "cell_assignments",
-  "terminal_subset_profiling",
+  "subset_profiling_candidates",
+  "subset_profiling_assignment",
   "aggregate_statistics"
 )
 
@@ -99,11 +100,11 @@ fcsExprs <- function(sample, keep_debris = FALSE) {
     cell_assignments <- sample$cell_assignments
     exprs <- cbind(exprs, cell_assignments$cell_assignments)
 
-    # Incorporate terminal subset profiling.
-    if (!is.null(sample$terminal_subset_profiling)) {
+    # Incorporate subset profiling.
+    if (!is.null(sample$subset_profiling_assignment)) {
       exprs$Profile <- exprs$Assignment
       exprs$Profile[!(exprs$Assignment %in% astrolabeDebrisLabels())] <-
-        sample$terminal_subset_profiling$Profile
+        sample$subset_profiling_assignment$Profile
       exprs$Profile[is.na(exprs$Profile)] <-
         exprs$Assignment[is.na(exprs$Profile)]
     }
@@ -180,7 +181,7 @@ getCellSubsetLevels <- function(sample) {
       Level = c("Assignment", paste0("Level_", seq(n_levels)))
     )
 
-    # Check for terminal subset profiling.
+    # Check for subset profiling.
     if ("Profile" %in% cols) {
       levels <-
         rbind(
