@@ -31,7 +31,7 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
 
   analyses <-
     names(differential_abundance_analysis$differential_abundance_analysis)
-  lapply(analyses, function(analysis) {
+  lapply(nameVector(analyses), function(analysis) {
     cell_counts <- getCellCounts(aggregate_statistics, analysis)
     group_feature_label <- differential_abundance_analysis$group_feature_label
     daa <-
