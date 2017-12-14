@@ -18,7 +18,7 @@ install.packages("devtools")
 
 3. Install orloj from the github repository:
 ```
-devtools::install_github("astrolabe/orloj")
+devtools::install_github("astrolabediagnostics/orloj")
 ```
 
 ## Operation
