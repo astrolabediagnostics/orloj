@@ -40,6 +40,62 @@ isSample <- function(sample) {
   }
 }
 
+.massSuspectValues <- function() {
+  # A list of suspect values. If too many of them suffix the description field
+  # of an FCS file (and are followed by other values) we might need to split
+  # that field and remove them.
+  c(
+    "142Nd", "Nd142",
+    "145Nd", "Nd145",
+    "147Sm", "Sm147",
+    "148Nd", "Nd148",
+    "149Sm", "Sm149",
+    "152Sm", "Sm152",
+    "153Eu", "Eu153",
+    "154Sm", "Sm154",
+    "171Yb", "Yb171"
+  )
+}
+
+.removeMassFromDesc <- function(desc) {
+  # Check to see whether channel descriptions have mass in them. If yes, attempt
+  # to remove them.
+  suspect_match <- pmatch(.massSuspectValues(), desc)
+  
+  if (sum(!is.na(suspect_match)) < 2) {
+    return(desc);
+  }
+  
+  # Check to see whether we can remove them using underscore splitting.
+  indices <- suspect_match[!is.na(suspect_match)]
+  successes <- unlist(lapply(indices, function(idx) {
+    desc <- strsplit(desc[idx], "_")
+    desc <- desc[[1]]
+    
+    desc[1] %in% .massSuspectValues() ||
+      paste0(desc[1], "Di") %in% .massSuspectValues()
+  }))
+  
+  if (length(successes) != length(indices)) {
+    # Doesn't work, terminate.
+    stop("FCS desc fields includes masses which cannot be removed")
+  }
+  
+  # Split each description.
+  unlist(lapply(desc, function(desc) {
+    if (desc == "") return("")
+    
+    desc <- strsplit(desc, "_")
+    desc <- desc[[1]]
+    
+    if (length(desc) == 1) {
+      ""
+    } else {
+      paste(desc[2:length(desc)], collapse = "_")
+    }
+  }))
+}
+
 #' Import FCS Channel Information.
 #'
 #' Import the TEXT section of an FCS file and extract channel names and
@@ -64,7 +120,10 @@ importFcsChannels <- function(filename) {
   channels$Desc[is.na(channels$Desc)] <- ""
   # Remove all non-alphanumeric characters from description.
   channels$Desc <- gsub("[^[:alnum:]]", "_", channels$Desc)
-
+  
+  # Identify whether description includes masses.
+  channels$Desc <- .removeMassFromDesc(channels$Desc)
+  
   channels
 }
 
