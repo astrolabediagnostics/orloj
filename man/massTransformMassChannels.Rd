@@ -4,7 +4,7 @@
 \alias{massTransformMassChannels}
 \title{Transform expression data for mass cytometry sample.}
 \usage{
-massTransformMassChannels(sample, cofactor = 5)
+massTransformMassChannels(sample, cofactor)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}

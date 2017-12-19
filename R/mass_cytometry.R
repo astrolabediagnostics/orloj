@@ -1,15 +1,22 @@
 # mass_cytometry.R
 # Pre-processing mass cytometry data.
 
+# The name of all of the bead channels.
+orloj_bead_channel_names <-
+  c(
+    "Ce140Di",
+    "Eu151Di",
+    "Ho165Di",
+    "Lu175Di"
+  )
+
 #' Preprocess mass cytometry sample.
 #'
 #' Quality control, cleaning, and transformation for mass cytometry sample.
 #'
 #' @inheritParams preprocess
 #' @return Sample after the above steps are done.
-massPreprocess <- function(sample,
-                           cofactor = 5,
-                           bead_percentile = 0.99) {
+massPreprocess <- function(sample, cofactor, bead_percentile) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   # Transform the mass channels.
@@ -29,7 +36,7 @@ massPreprocess <- function(sample,
 #' @param sample An Astrolabe sample.
 #' @param cofactor Cofactor for asinh transformation.
 #' @return Sample, with expression data transformed.
-massTransformMassChannels <- function(sample, cofactor = 5) {
+massTransformMassChannels <- function(sample, cofactor) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   name <- sample$parameter_name
@@ -73,9 +80,7 @@ massTransformMassChannels <- function(sample, cofactor = 5) {
 #' @param min_n Minimum number of events in order to try and detect beads.
 #' @return Sample, with additional non_bead_indices and non_bead_message.
 #' fields.
-massFindNonBeadEvents <- function(sample,
-                                  bead_percentile = 0.99,
-                                  min_n = 200) {
+massFindNonBeadEvents <- function(sample, bead_percentile, min_n = 200) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   n_bead_channels <- length(orloj_bead_channel_names)

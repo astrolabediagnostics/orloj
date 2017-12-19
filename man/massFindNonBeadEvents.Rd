@@ -4,7 +4,7 @@
 \alias{massFindNonBeadEvents}
 \title{Find the indices of non-bead events.}
 \usage{
-massFindNonBeadEvents(sample, bead_percentile = 0.99, min_n = 200)
+massFindNonBeadEvents(sample, bead_percentile, min_n = 200)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}

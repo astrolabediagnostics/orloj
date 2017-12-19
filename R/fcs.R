@@ -2,15 +2,6 @@
 # Functions for the import, quality control, and processing of Flow Cytometry
 # Standard (FCS) files.
 
-# The name of all of the bead channels.
-orloj_bead_channel_names <-
-  c(
-    "Ce140Di",
-    "Eu151Di",
-    "Ho165Di",
-    "Lu175Di"
-  )
-
 #' Astrolabe debris labels.
 #' 
 #' @return Vector of Astrolabe debris labels.
@@ -223,11 +214,11 @@ importFcsFile <- function(filename,
 #' @inheritParams massFindNonBeadEvents
 #' @return Sample after the above steps are done.
 #' @export
-preprocess <- function(sample, cofactor = 5) {
+preprocess <- function(sample, cofactor = 5, bead_percentile = 0.98) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   if (sample$source == "mass_cytometry") {
-    massPreprocess(sample, cofactor)
+    massPreprocess(sample, cofactor, bead_percentile)
   } else if (sample$source == "flow_cytometry") {
     flowPreprocess(sample)
   } else {

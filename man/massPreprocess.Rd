@@ -4,12 +4,15 @@
 \alias{massPreprocess}
 \title{Preprocess mass cytometry sample.}
 \usage{
-massPreprocess(sample, cofactor = 5, bead_percentile = 0.99)
+massPreprocess(sample, cofactor, bead_percentile)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}
 
 \item{cofactor}{Cofactor for asinh transformation.}
+
+\item{bead_percentile}{Clusters where at least one of the bead channels is
+below this threshold are non-bead clusters.}
 }
 \value{
 Sample after the above steps are done.
