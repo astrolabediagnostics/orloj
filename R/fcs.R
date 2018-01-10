@@ -167,7 +167,7 @@ importFcsFile <- function(filename,
 
   # Apply compensation if necessary.
   spill <- flowCore::keyword(flow_frame)$`SPILL`
-  if (!is.null(spill)) flow_frame <- flowCore::compensate(flow_frame, spill)
+  if (is.matrix(spill)) flow_frame <- flowCore::compensate(flow_frame, spill)
 
   exprs <- tibble::as_tibble(flow_frame@exprs)
   desc <- channels$Desc
