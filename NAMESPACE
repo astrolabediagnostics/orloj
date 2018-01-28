@@ -2,6 +2,7 @@
 
 export(addBackticks)
 export(astrolabeDebrisLabels)
+export(beadChannelNames)
 export(calculateFcsDigest)
 export(differentialAbundanceAnalysis)
 export(experimentCellSubsetChannelStatistics)

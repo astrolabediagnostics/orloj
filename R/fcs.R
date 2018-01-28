@@ -211,14 +211,13 @@ importFcsFile <- function(filename,
 #'
 #' @param sample An Astrolabe sample.
 #' @inheritParams massTransformMassChannels
-#' @inheritParams massFindNonBeadEvents
 #' @return Sample after the above steps are done.
 #' @export
-preprocess <- function(sample, cofactor = 5, bead_percentile = 0.98) {
+preprocess <- function(sample, cofactor = 5) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   if (sample$source == "mass_cytometry") {
-    massPreprocess(sample, cofactor, bead_percentile)
+    massPreprocess(sample, cofactor)
   } else if (sample$source == "flow_cytometry") {
     flowPreprocess(sample)
   } else {
