@@ -50,7 +50,8 @@ isSample <- function(sample) {
   # Remove mass from channel descriptions.
   mass_str <- paste0("(", paste(.massSuspectValues(), collapse = "|"), ")")
   
-  suspect_match <- unlist(lapply(desc, function(s) grepl(mass_str, s)))
+  suspect_match <-
+    unlist(lapply(desc, function(s) { grepl(mass_str, s) & grepl("_", s) }))
   if (sum(suspect_match) < 2) return(desc);
   
   # Try to remove them using regular expression.
@@ -62,7 +63,8 @@ isSample <- function(sample) {
     }))
   
   # Check whether removal succeeded.
-  suspect_match <- unlist(lapply(desc, function(s) grepl(mass_str, s)))
+  suspect_match <-
+    unlist(lapply(desc, function(s) { grepl(mass_str, s) & grepl("_", s) }))
   if (sum(suspect_match) >= 2) {
     stop("failed to remove masses from channel descriptions")
   }
