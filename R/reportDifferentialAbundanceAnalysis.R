@@ -27,7 +27,14 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
     stop(paste0("unable to find ", daa_filename))
   }
   differential_abundance_analysis <- readRDS(daa_filename)
+  # Get group feature label + name.
   group_feature_label <- differential_abundance_analysis$group_feature_label
+  if (!is.null(group_feature_label)) {
+    group_feature_name <-
+      dplyr::filter(experiment$features,
+                    FeatureId == gsub("feature_", "",
+                                      group_feature_label))$FeatureName
+  }
 
   analyses <-
     names(differential_abundance_analysis$differential_abundance_analysis)
@@ -144,16 +151,36 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
 
         # Generate line plot, using the box_plot parameters as base.
         if (include_line_plots) {
+          # Copy height/width from box plot.
           line_plot <- box_plot
+          # Reorganize data.
           line_plot_data <- cell_subset_data %>%
             dplyr::group_by_(group_feature_label, feature_r_name) %>%
             dplyr::summarize(Frequency = median(Frequency))
+          # Subset data for labels.
+          label_data <- line_plot_data
+          last_value <- tail(unique(line_plot_data[[feature_r_name]]), 1)
+          label_data <- label_data[label_data[[feature_r_name]] == last_value, ]
+          
           line_plot$plt <-
             ggplot(line_plot_data,
                    aes_string(x = feature_r_name, y = "Frequency")) +
             geom_line(aes_string(group = group_feature_label)) +
+            geom_text(data = label_data,
+                      aes_string(x = Inf,
+                                 label = group_feature_label),
+                      hjust = 2) +
             scale_y_continuous(labels = scales::percent) +
             labs(title = fig_title, x = feature_name)
+          # Update the data with a table of values by group variable.
+          line_plot$data <-
+            reshape2::dcast(
+              line_plot_data,
+              as.formula(paste0(group_feature_label, " ~ ", feature_r_name)),
+              value.var = "Frequency"
+            )
+          colnames(line_plot$data)[1] <- group_feature_name
+          
           feature_report[["line_plots"]][[cell_subset_label]] <- line_plot
         }
       }
