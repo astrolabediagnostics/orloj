@@ -32,59 +32,47 @@ isSample <- function(sample) {
 }
 
 .massSuspectValues <- function() {
-  # A list of suspect values. If too many of them suffix the description field
-  # of an FCS file (and are followed by other values) we might need to split
-  # that field and remove them.
+  # A list of suspect values. If too many of them are included in the
+  # description field of an FCS file (and include additional values) we will
+  # remove them.
   c(
-    "142Nd", "Nd142",
-    "145Nd", "Nd145",
-    "147Sm", "Sm147",
-    "148Nd", "Nd148",
-    "149Sm", "Sm149",
-    "152Sm", "Sm152",
-    "153Eu", "Eu153",
-    "154Sm", "Sm154",
-    "171Yb", "Yb171"
+    "141Pr", "Pr141", "142Nd", "Nd142", "143Nd", "Nd143", "144Nd", "Nd144",
+    "145Nd", "Nd145", "146Nd", "Nd146", "147Sm", "Sm147", "148Nd", "Nd148",
+    "149Sm", "Sm149", "150Nd", "Nd150", "151Eu", "Eu151", "152Sm", "Sm152",
+    "153Eu", "Eu153", "154Sm", "Sm154", "156Gd", "Gd156", "158Gd", "Gd158",
+    "162Dy", "Dy162", "165Ho", "Ho165", "167Er", "Er167", "168Er", "Er168",
+    "169Tm", "Tm169", "170Er", "Er170", "171Yb", "Yb171", "172Yb", "Yb172",
+    "174Yb", "Yb174", "175Lu", "Lu175", "176Yb", "Yb176"
   )
 }
 
 .removeMassFromDesc <- function(desc) {
-  # Check to see whether channel descriptions have mass in them. If yes, attempt
-  # to remove them.
-  suspect_match <- pmatch(.massSuspectValues(), desc)
+  # Remove mass from channel descriptions.
+  mass_str <- paste0("(", paste(.massSuspectValues(), collapse = "|"), ")")
   
-  if (sum(!is.na(suspect_match)) < 2) {
-    return(desc);
+  suspect_match <- unlist(lapply(desc, function(s) grepl(mass_str, s)))
+  if (sum(suspect_match) < 2) return(desc);
+  
+  # Try to remove them using regular expression.
+  desc[suspect_match] <-
+    unlist(lapply(desc[suspect_match], function(s) {
+      s <- gsub(paste0("_", mass_str, "_"), "", s)
+      s <- gsub(paste0(mass_str, "_"), "", s)
+      s <- gsub(paste0("_", mass_str), "", s)
+    }))
+  
+  # Check whether removal succeeded.
+  suspect_match <- unlist(lapply(desc, function(s) grepl(mass_str, s)))
+  if (sum(suspect_match) >= 2) {
+    stop("failed to remove masses from channel descriptions")
   }
   
-  # Check to see whether we can remove them using underscore splitting.
-  indices <- suspect_match[!is.na(suspect_match)]
-  successes <- unlist(lapply(indices, function(idx) {
-    desc <- strsplit(desc[idx], "_")
-    desc <- desc[[1]]
-    
-    desc[1] %in% .massSuspectValues() ||
-      paste0(desc[1], "Di") %in% .massSuspectValues()
-  }))
-  
-  if (length(successes) != length(indices)) {
-    # Doesn't work, terminate.
-    stop("FCS desc fields includes masses which cannot be removed")
-  }
-  
-  # Split each description.
-  unlist(lapply(desc, function(desc) {
-    if (desc == "") return("")
-    
-    desc <- strsplit(desc, "_")
-    desc <- desc[[1]]
-    
-    if (length(desc) == 1) {
-      ""
-    } else {
-      paste(desc[2:length(desc)], collapse = "_")
-    }
-  }))
+  return(desc);
+}
+
+.removeEqFromDesc <- function(desc) {
+  # Remove "EQ" suffix from channel descriptions.
+  unlist(lapply(desc, function(s) gsub("_EQ", "", s)))
 }
 
 #' Import FCS Channel Information.
@@ -112,8 +100,9 @@ importFcsChannels <- function(filename) {
   # Remove all non-alphanumeric characters from description.
   channels$Desc <- gsub("[^[:alnum:]]", "_", channels$Desc)
   
-  # Identify whether description includes masses.
+  # Remove masses and EQ suffix from channel descriptions.
   channels$Desc <- .removeMassFromDesc(channels$Desc)
+  channels$Desc <- .removeEqFromDesc(channels$Desc)
   
   channels
 }
