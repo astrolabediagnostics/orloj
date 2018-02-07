@@ -12,19 +12,25 @@ reportBeads <- function(sample) {
 
   if (sample$source != "mass_cytometry") stop("Expecting mass cytometry data")
 
-  # Get expression data and mark beads.
-  bead_channel_indices <- match(beadChannelNames(), sample$parameter_name)
-  if (any(is.na(bead_channel_indices))) {
+  if (nrow(sample$exprs) == length(sample$non_bead_indices)) {
+    # No beads were found, nothing to report.
     return(NULL);
   }
+
+  # Get expression data and mark beads.
+  bead_channel_indices <- match(beadChannelNames(), sample$parameter_name)
+  existing_beads <- which(!is.na(bead_channel_indices))
+  bead_channel_indices <- bead_channel_indices[existing_beads]
+  bead_channel_names <- beadChannelNames()[existing_beads]
+
   exprs <- sample$exprs[, bead_channel_indices]
-  colnames(exprs) <- beadChannelNames()
+  colnames(exprs) <- bead_channel_names
   exprs$Bead <- TRUE
   exprs$Bead[sample$non_bead_indices] <- FALSE
 
   # Plot: First bead channel versus all of the other bead channels
-  x <- beadChannelNames()[1]
-  ys <- setdiff(beadChannelNames(), x)
+  x <- bead_channel_names[1]
+  ys <- setdiff(bead_channel_names, x)
   report <- lapply(ys, function(y) {
     plotScatterPlot(exprs, x, y, "Bead")
   })
