@@ -14,6 +14,9 @@ reportBeads <- function(sample) {
 
   # Get expression data and mark beads.
   bead_channel_indices <- match(beadChannelNames(), sample$parameter_name)
+  if (any(is.na(bead_channel_indices))) {
+    return(NULL);
+  }
   exprs <- sample$exprs[, bead_channel_indices]
   colnames(exprs) <- beadChannelNames()
   exprs$Bead <- TRUE
