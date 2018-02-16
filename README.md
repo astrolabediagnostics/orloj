@@ -115,7 +115,7 @@ After loading a sample, you can access its FCS data and cell subset assignments:
 
 > Astrolabe uses hyperbolic arcsine with a cofactor of 5 when transforming mass cytometry data.
 >
-> By default, `orloj::fcsExprs` removes events that were identified as debris by Astrolabe. If you would like to keep them, call `orloj::fcsExprs(s, keep_debrus = TRUE)` instead. `orloj::fcsExprs` always removes events that were identified as CyTOF calibration beads.
+> By default, `orloj::fcsExprs` removes events that were identified as debris by Astrolabe. If you would like to keep them, call `orloj::fcsExprs(s, keep_debris = TRUE)` instead. `orloj::fcsExprs` always removes events that were identified as CyTOF calibration beads.
 
 orloj supplies two functions for easily accessing the sample's subet cell counts and channel intensity medians:
 
