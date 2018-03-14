@@ -4,12 +4,10 @@
 \alias{preprocess}
 \title{Preprocess an Astrolabe sample.}
 \usage{
-preprocess(sample, cofactor = 5)
+preprocess(sample)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}
-
-\item{cofactor}{Cofactor for asinh transformation.}
 }
 \value{
 Sample after the above steps are done.

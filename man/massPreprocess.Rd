@@ -4,7 +4,7 @@
 \alias{massPreprocess}
 \title{Preprocess mass cytometry sample.}
 \usage{
-massPreprocess(sample, cofactor)
+massPreprocess(sample, cofactor = 5)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}

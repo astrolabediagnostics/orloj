@@ -22,7 +22,7 @@ astrolabeDebrisLabels <- function() {
 #' @export
 isSample <- function(sample) {
   default_fields <-
-    c("exprs", "parameter_name", "parameter_desc", "source")
+    c("exprs", "parameter_name", "parameter_desc", "instrument")
 
   if (!is.list(sample)) {
     FALSE
@@ -101,6 +101,10 @@ importFcsChannels <- function(filename) {
     Desc = fcs_text[desc_keywords]
   )
 
+  # Copy flow-specific channels from name to desc.
+  flow_pattern <- "(^FSC-.$|^SSC-.$)"
+  flow_names <- grepl(flow_pattern, channels$Name)
+  channels$Desc[flow_names] <- channels$Name[flow_names]
   # Convert NA description to empty string.
   channels$Desc[is.na(channels$Desc)] <- ""
   # Remove all non-alphanumeric characters from description.
@@ -138,6 +142,20 @@ calculateFcsDigest <- function(sample, parameter_name = NULL) {
   digest::digest(list(desc = parameter_desc, name = parameter_name))
 }
 
+.identifyFcsInstrument <- function(flow_frame) {
+  # Identify the instrument of a flow frame.
+
+  cyt <- tolower(flow_frame@description$`$CYT`)
+
+  if (grepl("cytof", cyt)) {
+    return("mass_cytometry")
+  } else if (grepl("aurora", cyt)) {
+    return("aurora")
+  } else {
+    return("unknown")
+  }
+}
+
 #' Import an FCS File.
 #'
 #' Imports an FCS file using flowCore::read.FCS and convert the flow_frame class
@@ -168,20 +186,8 @@ importFcsFile <- function(filename,
   desc <- channels$Desc
   name <- channels$Name
 
-  # Identify whether this is flow or mass cytometry data.
-  source_flow_cytometry <-
-    length(grep("FSC", name)) > 0 && length(grep("SSC", name)) > 0
-  source_mass_cytometry <-
-    length(grep("Ir191", name)) > 0 && length(grep("Ir193", name)) > 0
-  if (source_flow_cytometry && source_mass_cytometry) {
-    stop("FCS file source identified as both flow and mass cytometry")
-  }
-  if (!source_flow_cytometry && !source_mass_cytometry) {
-    stop("cannot identify FCS file source")
-  }
-  source <- ""
-  if (source_flow_cytometry) source <- "flow_cytometry"
-  if (source_mass_cytometry) source <- "mass_cytometry"
+  # Identify the instrument of this file.
+  instrument <- .identifyFcsInstrument(flow_frame)
 
   # Decide on column names, desc by default, if no desc use name.
   exprs_colnames <- desc
@@ -198,24 +204,23 @@ importFcsFile <- function(filename,
     exprs = exprs,
     parameter_name = name,
     parameter_desc = desc,
-    source = source
+    instrument = instrument
   )
 }
 
 #' Preprocess an Astrolabe sample.
 #'
 #' @param sample An Astrolabe sample.
-#' @inheritParams massTransformMassChannels
 #' @return Sample after the above steps are done.
 #' @export
-preprocess <- function(sample, cofactor = 5) {
+preprocess <- function(sample) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
-  if (sample$source == "mass_cytometry") {
-    massPreprocess(sample, cofactor)
-  } else if (sample$source == "flow_cytometry") {
-    flowPreprocess(sample)
+  if (sample$instrument == "mass_cytometry") {
+    massPreprocess(sample)
+  } else if (sample$instrument == "aurora") {
+    auroraPreprocess(sample)
   } else {
-    stop("unknown sample source")
+    stop("unknown sample instrument")
   }
 }

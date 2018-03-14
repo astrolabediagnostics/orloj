@@ -10,7 +10,8 @@ reportBeads <- function(sample) {
   # TODO statistics report
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
-  if (sample$source != "mass_cytometry") stop("Expecting mass cytometry data")
+  # Only mass cytometry data has beads.
+  if (sample$instrument != "mass_cytometry") return(NULL);
 
   if (nrow(sample$exprs) == length(sample$non_bead_indices)) {
     # No beads were found, nothing to report.

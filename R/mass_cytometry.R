@@ -18,13 +18,15 @@ beadChannelNames <- function() {
 #'
 #' Quality control, cleaning, and transformation for mass cytometry sample.
 #'
+#' @param cofactor Cofactor for asinh transformation.
 #' @inheritParams preprocess
 #' @return Sample after the above steps are done.
-massPreprocess <- function(sample, cofactor) {
+massPreprocess <- function(sample, cofactor = 5) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   # Transform the mass channels.
   sample <- massTransformMassChannels(sample, cofactor)
+  sample$cofactor <- cofactor
 
   sample
 }
