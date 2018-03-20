@@ -13,6 +13,5 @@ reportBeads(sample)
 An orloj report list with all of the required objects.
 }
 \description{
-Generates plots and CSV files that report on the beads in a mass cytometry
-file.
+Generates plots that report on the beads in a mass cytometry file.
 }

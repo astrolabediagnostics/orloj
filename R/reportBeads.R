@@ -1,7 +1,6 @@
 #' Bead report.
 #'
-#' Generates plots and CSV files that report on the beads in a mass cytometry
-#' file.
+#' Generates plots that report on the beads in a mass cytometry file.
 #'
 #' @param sample An Astrolabe sample.
 #' @return An orloj report list with all of the required objects.
@@ -29,7 +28,7 @@ reportBeads <- function(sample) {
   exprs$Bead <- TRUE
   exprs$Bead[sample$non_bead_indices] <- FALSE
 
-  # Plot: First bead channel versus all of the other bead channels
+  # Figure: First bead channel versus all of the other bead channels
   x <- bead_channel_names[1]
   ys <- setdiff(bead_channel_names, x)
   report <- lapply(ys, function(y) {
