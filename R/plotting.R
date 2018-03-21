@@ -181,6 +181,7 @@ plotScatterPlot <- function(data,
       geom_point(aes_string(color = color_bt),
                  alpha = alpha,
                  size = size) +
+      guides(color = guide_legend(override.aes = list(size = 2, alpha = 1))) +
       theme(legend.position = "bottom")
   }
 

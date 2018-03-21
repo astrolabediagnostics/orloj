@@ -14,5 +14,5 @@ An orloj report list with all of the required objects.
 }
 \description{
 Generates plots that report on events with extreme FSC-A values, high FSC-W
-values, or high LD values.'
+values, or high LD values.
 }
