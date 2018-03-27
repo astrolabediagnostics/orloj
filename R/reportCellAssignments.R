@@ -15,13 +15,12 @@ reportCellAssignments <- function(sample, report_levels = FALSE) {
   levels <- getCellSubsetLevels(sample)
   class_channels <- sample$cell_assignments$class_channels
 
-  if (!report_levels) {
-    levels <- dplyr::filter(levels, Level %in% c("Assignment", "Profile"))
+  if (!all(class_channels %in% colnames(exprs))) {
+    stop("At least one class channel is missing from the exprs data frame")
   }
 
-  # For Profile level, only report terminal subsets.
-  if ("Profile" %in% levels$Level) {
-    levels$Parent[levels$Level == "Profile"] <- "Level_0"
+  if (!report_levels) {
+    levels <- dplyr::filter(levels, Level %in% c("Assignment", "Profile"))
   }
 
   # Normalize expression to the 0-1 range across class channels.

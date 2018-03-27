@@ -172,28 +172,29 @@ sampleCellSubsetChannelStatistics <- function(sample, level = "Assignment") {
 #' @return A data frame with cell subset levels.
 #' @export
 getCellSubsetLevels <- function(sample) {
-  if (!isSample(sample)) stop("Expecting sample list object")
+  if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   exprs <- fcsExprs(sample)
   cols <- colnames(exprs)
   n_levels <- length(grep("Level_", colnames(exprs))) - 1
 
-  levels <- tibble::tibble()
+  levels <- tibble::tibble(Parent = character(0), Level = character(0))
 
+  # Assignment levels.
   if (n_levels > 0) {
     levels <- tibble::tibble(
       Parent = c("Level_0", paste0("Level_", seq(n_levels) - 1)),
       Level = c("Assignment", paste0("Level_", seq(n_levels)))
     )
+  }
 
-    # Check for subset profiling.
-    if ("Profile" %in% cols) {
-      levels <-
-        rbind(
-          levels,
-          tibble::tibble(Parent = "Assignment", Level = "Profile")
-        )
-    }
+  # Profiling level.
+  if ("Profile" %in% cols) {
+    levels <-
+      rbind(
+        levels,
+        tibble::tibble(Parent = "Level_0", Level = "Profile")
+      )
   }
 
   levels

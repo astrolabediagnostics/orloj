@@ -18,7 +18,15 @@ reportCombineAggregateStatistics <- function(experiment) {
   }
   aggregate_statistics <- readRDS(aggregate_statistics_filename)
 
-  analyses <- nameVector(c("Assignment", "Profiling"))
+  analyses <- c()
+  if ("Assignment" %in% aggregate_statistics$subset_cell_counts$Parent) {
+    analyses <- c(analyses, "Assignment")
+  }
+  if ("Profile" %in% aggregate_statistics$subset_cell_counts$Parent) {
+    analyses <- c(analyses, "Profiling")
+  }
+  analyses <- nameVector(analyses)
+
   lapply(analyses, function(analysis) {
     # Get cell counts for this analysis, match with sample names, and calculate
     # cell subset frequencies.
