@@ -16,9 +16,15 @@ License: file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:
-    tidyverse,
-    reshape2,
-    Rtsne,
+    dplyr,
     flowCore,
-    FlowSOM
+    FlowSOM,
+    ggplot2,
+    ggrepel,
+    gtools,
+    magrittr,
+    reshape2,
+    tibble,
+    tidyr,
+    wrapr
 RoxygenNote: 6.0.1
