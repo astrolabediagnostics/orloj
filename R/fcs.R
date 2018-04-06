@@ -98,21 +98,23 @@ importFcsChannels <- function(filename) {
   desc_keywords <- paste("$P", seq(n_parameters), "S", sep = "")
   channels <- tibble::tibble(
     Name = fcs_text[name_keywords],
-    Desc = fcs_text[desc_keywords]
+    OrigDesc = fcs_text[desc_keywords]
   )
+  channels$Desc <- channels$OrigDesc
 
   # Copy flow-specific channels from name to desc.
   flow_pattern <- "(^FSC-.$|^SSC-.$)"
   flow_names <- grepl(flow_pattern, channels$Name)
   channels$Desc[flow_names] <- channels$Name[flow_names]
-  # Convert NA description to empty string.
-  channels$Desc[is.na(channels$Desc)] <- ""
-  # Remove all non-alphanumeric characters from description.
-  channels$Desc <- gsub("[^[:alnum:]]", "_", channels$Desc)
-  
   # Remove masses and EQ suffix from channel descriptions.
   channels$Desc <- .removeMassFromDesc(channels$Desc)
   channels$Desc <- .removeEqFromDesc(channels$Desc)
+  # NA/empty descriptions should copy from name.
+  channels$Desc[is.na(channels$Desc) | channels$Desc == ""] <-
+    channels$Name[is.na(channels$Desc) | channels$Desc == ""]
+
+  # Remove all non-alphanumeric characters from description.
+  channels$Desc <- gsub("[^[:alnum:]]", "_", channels$Desc)
   
   channels
 }
