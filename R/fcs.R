@@ -144,7 +144,14 @@ calculateFcsDigest <- function(sample, parameter_name = NULL) {
   digest::digest(list(desc = parameter_desc, name = parameter_name))
 }
 
-.identifyFcsInstrument <- function(flow_frame) {
+#' Identify FCS file instrument.
+#'
+#' Read the CYT field from the FCS file header.
+#'
+#' @param flow_frame FlowCore flow frame.
+#' @return Instrument for flow frame.
+#' @export
+identifyFcsInstrument <- function(flow_frame) {
   # Identify the instrument of a flow frame.
 
   cyt <- tolower(flow_frame@description$`$CYT`)
@@ -158,10 +165,9 @@ calculateFcsDigest <- function(sample, parameter_name = NULL) {
   }
 }
 
-#' Import an FCS File.
+#' Convert a FlowCore flow_frame to Astrolabe sample.
 #'
-#' Imports an FCS file using flowCore::read.FCS and convert the flow_frame class
-#' into orloj's internal FCS list format.
+#' Convert the flow_frame class into orloj's internal FCS list format.
 #'
 #' The orloj FCS list format will accumulate more fields as analyses are
 #' applied to it. For example, pre-processing will add a mask to find the
@@ -169,15 +175,13 @@ calculateFcsDigest <- function(sample, parameter_name = NULL) {
 #' data after applying all of the masks that are in the list.
 #'
 #' @param filename The name of the FCS file to import.
-#' @param transformation Which flowCore transformation to use. See
-#' \code{\link[flowCore]{read.FCS}} for more information
+#' @param flow_frame FlowCore flow frame.
 #' @seealso \code{\link{isSample}}, \code{\link{fcsExprs}}
 #' @return FCS data, in orloj internal FCS list format.
 #' @export
-importFcsFile <- function(filename,
-                          transformation = "linearize") {
+convertFlowFrame <- function(filename, flow_frame) {
   # Import flow data and channels information.
-  flow_frame <- flowCore::read.FCS(filename, transformation)
+  instrument <- identifyFcsInstrument(flow_frame)
   channels <- importFcsChannels(filename)
 
   # Apply compensation if necessary.
@@ -187,9 +191,6 @@ importFcsFile <- function(filename,
   exprs <- tibble::as_tibble(flow_frame@exprs)
   desc <- channels$Desc
   name <- channels$Name
-
-  # Identify the instrument of this file.
-  instrument <- .identifyFcsInstrument(flow_frame)
 
   # Decide on column names, desc by default, if no desc use name.
   exprs_colnames <- desc

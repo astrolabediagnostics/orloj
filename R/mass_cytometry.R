@@ -26,7 +26,6 @@ massPreprocess <- function(sample, cofactor = 5) {
 
   # Transform the mass channels.
   sample <- massTransformMassChannels(sample, cofactor)
-  sample$cofactor <- cofactor
 
   sample
 }
@@ -66,6 +65,8 @@ massTransformMassChannels <- function(sample, cofactor) {
   sample$exprs[, mass_channel_indices] <-
     asinh(sample$exprs[, mass_channel_indices] / cofactor)
   sample$mass_channel_indices <- mass_channel_indices
+
+  sample$trans_function <- function(x) { asinh(x / 5) }
 
   sample
 }

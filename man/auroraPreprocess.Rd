@@ -4,16 +4,21 @@
 \alias{auroraPreprocess}
 \title{Preprocess Aurora sample.}
 \usage{
-auroraPreprocess(sample, cofactor = 150)
+auroraPreprocess(sample)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}
-
-\item{cofactor}{Cofactor for asinh transformation.}
 }
 \value{
 Sample after the above steps are done.
 }
 \description{
-Quality control, cleaning, and transformation for Aurora sample.
+Quality control and cleaning for Aurora sample.
+}
+\details{
+Transformation of Aurora data should be done before converting the flow frame
+into an Astrolabe sample.
+}
+\seealso{
+\code{\link{auroraTransformChannels}}
 }
