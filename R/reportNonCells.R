@@ -10,17 +10,23 @@ reportNonCells <- function(sample) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   # Only Aurora data has non-cell indices.
-  if (sample$instrument != "aurora") return(NULL);
+  if (sample$instrument != "aurora") return(NULL)
 
   if (nrow(sample$exprs) == length(sample$non_cell_indices)) {
-    # No beads were found, nothing to report.
-    return(NULL);
+    # No non-cell indices found, nothing to report.
+    return(NULL)
+  }
+
+  exprs <- orloj::fcsExprs(sample, keep_debris = TRUE)
+
+  if (!all(c("FSC_A", "FSC_W", "LD") %in% colnames(exprs))) {
+    # One or more Aurora columns missing, nothing to report.
+    return(NULL)
   }
 
   report <- list()
 
   # Get FSC-A, FSC-W, and LD, and set the various non-cell events.
-  exprs <- orloj::fcsExprs(sample, keep_debris = TRUE)
   exprs <- exprs[, c("FSC_A", "FSC_W", "LD")]
   exprs$EventType <- c("Cell")
   exprs$EventType[sample$extreme_fsc_a_indices] <- "FSC-A High/Low"
