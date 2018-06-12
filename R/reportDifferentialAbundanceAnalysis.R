@@ -124,16 +124,18 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
         fdr <-
           dplyr::filter(feature_top_tags, CellSubset == cell_subset_label)$FDR
         fdr_str <- paste0("(", formatPvalue(fdr, "FDR"), ")")
-        fig_title <- paste0(cell_subset_label, " ", fdr_str)
+        fig_title <- cell_subset_label
+        fig_subtitle <- fdr_str
 
         # Generate box plot.
         box_plot <-
           plotBoxPlot(cell_subset_data,
                       x = feature_r_name,
                       y = "Frequency",
-                      title = fig_title,
                       scale_y_labels = scales::percent)
-        box_plot$plt <- box_plot$plt + xlab(feature_name)
+        box_plot$plt <- box_plot$plt +
+          ggtitle(fig_title, subtitle = fig_subtitle) +
+          xlab(feature_name)
         feature_report[["box_plots"]][[cell_subset_label]] <- box_plot
 
         # Generate bar plot.
@@ -145,8 +147,9 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
                       x = "SampleName",
                       y = "Frequency",
                       fill = feature_r_name,
-                      title = fig_title,
                       scale_y_labels = scales::percent)
+        bar_plot$plt = bar_plot$plt +
+          ggtitle(fig_title, subtitle = fig_subtitle)
         feature_report[["bar_plots"]][[cell_subset_label]] <- bar_plot
 
         # Generate line plot, using the box_plot parameters as base.
@@ -168,10 +171,11 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
             geom_line(aes_string(group = group_feature_label)) +
             geom_text(data = label_data,
                       aes_string(x = Inf,
+                                 y = "Frequency",
                                  label = group_feature_label),
-                      hjust = 2) +
+                      hjust = 2, inherit.aes = FALSE) +
             scale_y_continuous(labels = scales::percent) +
-            labs(title = fig_title, x = feature_name)
+            labs(title = fig_title, subtitle = fig_subtitle, x = feature_name)
           # Update the data with a table of values by group variable.
           line_plot$data <-
             reshape2::dcast(
