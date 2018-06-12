@@ -92,7 +92,7 @@ reportNonCells <- function(sample) {
                   round(per_alive * 100, 1), "%) live events"),
          y = "Live/Dead Staining (Pt195)") +
     theme(aspect.ratio = 1)
-  report$LiveDead <- list(plt = plt)
+  report$LiveDead <- list(plt = plt, width = 600, height = 600)
   
   report
 }
