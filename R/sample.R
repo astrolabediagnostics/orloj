@@ -95,9 +95,17 @@ fcsExprs <- function(sample, keep_debris = FALSE) {
 
   exprs <- sample$exprs
 
-  # Filter to non-bead events only.
-  if (!is.null(sample$non_bead_indices)) {
-    exprs <- exprs[sample$non_bead_indices, ]
+  # Mass cytometry: Filter to non-bead, live events only.
+  if (sample$instrument == "mass_cytometry") {
+    keep_indices <- seq(nrow(exprs))
+
+    if (is.null(sample$non_bead_indices)) {
+      sample$non_bead_incices <- keep_indices
+    }
+    if (is.null(sample$live_indices)) sample$live_indices <- keep_indices
+    
+    keep_indices <- intersect(sample$non_bead_indices, sample$live_indices)
+    exprs <- exprs[keep_indices, ]
   }
 
   # Incorporate cell assignments.
