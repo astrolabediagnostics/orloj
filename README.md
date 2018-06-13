@@ -27,9 +27,7 @@ orloj provides access to the RDS files that are exported by Astrolabe. Before pr
 
 > Throughout this guide technical notes appear in blockquote.
 >
-> The examples here use data from [Tordesillas et al., J Allergy Clin Immunol, 2016](https://www.ncbi.nlm.nih.gov/pubmed/27531074). You can download the raw data from [the FlowRepository repo](https://flowrepository.org/id/FR-FCM-ZZTW), or download the [Astrolabe `experiment.zip` file](). We assume that you unzipped the file to `D:/data/tordesillas`.
-
-**TODO update link to file above**
+> The examples here use data from [Tordesillas et al., J Allergy Clin Immunol, 2016](https://www.ncbi.nlm.nih.gov/pubmed/27531074). You can download the raw data from [the FlowRepository repo](https://flowrepository.org/id/FR-FCM-ZZTW), or download the [Astrolabe `analysis.zip` file](https://s3.us-east-2.amazonaws.com/astrolabediagnostics-public/astrolabe_analysis_tordesillas_et_al.zip). We assume that you unzipped the file to `D:/data/tordesillas`.
 
 All orloj operations are done within the scope of an Astrolabe experiment. Start by loading the experiment:
 
