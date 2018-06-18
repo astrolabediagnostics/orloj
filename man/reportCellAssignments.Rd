@@ -14,6 +14,9 @@ in addition to terminal level heatmaps.}
 }
 \description{
 Generate plots and CSV files that report on cell assignments to cell subsets.
-Report includes a heatmap of all cell subsets in each level, and biaxial
-plots of each subset separately.
+For each level, the report includes the following over all (subset, channel)
+combinations:
+- Heatmap of channel median in that subset
+- Heatmap of channel coefficient of variation in that subset
+- Violin plots of channel distribution in each subset
 }

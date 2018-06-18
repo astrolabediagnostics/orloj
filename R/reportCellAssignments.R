@@ -1,8 +1,11 @@
 #' Cell assignments report.
 #'
 #' Generate plots and CSV files that report on cell assignments to cell subsets.
-#' Report includes a heatmap of all cell subsets in each level, and biaxial
-#' plots of each subset separately.
+#' For each level, the report includes the following over all (subset, channel)
+#' combinations:
+#' - Heatmap of channel median in that subset
+#' - Heatmap of channel coefficient of variation in that subset
+#' - Violin plots of channel distribution in each subset
 #'
 #' @param sample An Astrolabe sample.
 #' @param report_levels If true, intermediate level heatmaps will be exported
@@ -23,51 +26,68 @@ reportCellAssignments <- function(sample, report_levels = FALSE) {
     levels <- dplyr::filter(levels, Level %in% c("Assignment", "Profile"))
   }
 
-  # Normalize expression to the 0-1 range across class channels.
-  exprs_norm <- exprs
-  exprs_norm[, class_channels] <-
-    apply(exprs_norm[, class_channels], 2, function(v) {
-      (v - min(v)) / (max(v) - min(v))
-    })
-
   # Generate reports for each labeling level.
   report <- list()
   for (level_row in seq(nrow(levels))) {
     level_col <- levels$Level[level_row]
     parent_col <- levels$Parent[level_row]
 
-    level_indices <- which(!is.na(exprs_norm[[level_col]]))
-    level_exprs_norm <- exprs_norm[level_indices, ]
-    parent_labels <- unique(exprs_norm[level_indices, parent_col])
+    level_indices <- which(!is.na(exprs[[level_col]]))
+    level_exprs <- exprs[level_indices, ]
+    parent_labels <- unique(exprs[level_indices, parent_col])
 
-    # Figure: Heatmap for each parent label.
-    level_report <-
-      lapply(nameVector(parent_labels), function(pl_label) {
-        # Get data for this parent label and convert to long format.
-        pl_indices <- level_exprs_norm[[parent_col]] == pl_label
-        pl_exprs_norm <-
-          level_exprs_norm[pl_indices, c(class_channels, level_col)]
-        pl_exprs_norm_long <-
-          reshape2::melt(pl_exprs_norm,
-                         id.vars = level_col,
-                         variable.name = "Channel",
-                         value.name = "Intensity")
-        # Generate heatmap.
-        heatmap_title <- pl_label
-        if (level_col %in% c("Assignment", "Profile")) {
-          heatmap_title <- level_col
-        }
-        plotHeatmapAggregate(pl_exprs_norm_long,
+    # Iterate over each parent labels. For Assignment and Profiling, there is
+    # only one parent label ("Root").
+    level_report <- list()
+    for (pl_label in parent_labels) {
+      # Get data for this parent label and convert to long format.
+      pl_indices <- level_exprs[[parent_col]] == pl_label
+      pl_exprs <-
+        level_exprs[pl_indices, c(class_channels, level_col)]
+      pl_exprs_long <-
+        reshape2::melt(pl_exprs,
+                       id.vars = level_col,
+                       variable.name = "Channel",
+                       value.name = "Intensity")
+      # Decide on name of value (either parent or assignment/profile).
+      name <- pl_label
+      if (level_col %in% c("Assignment", "Profile")) {
+        name <- level_col
+      }
+
+      # Figure: Intensity heatmap.
+      level_report[[name]] <-
+        plotHeatmapAggregate(pl_exprs_long,
                              x = "Channel",
                              y = level_col,
                              value = "Intensity",
                              type = "cluster_labels",
-                             title = heatmap_title)
-      })
+                             title = name)
 
-    # Rename level to Assignment/Profile for these levels.
-    if (level_col %in% c("Assignment", "Profile")) {
-      names(level_report) <- level_col
+      # Figure: CV(Intensity) heatmap.
+      level_report[[paste0(name, "_cv")]] <-
+        plotHeatmapAggregate(pl_exprs_long,
+                             x = "Channel",
+                             y = level_col,
+                             value = "Intensity",
+                             func = function(v) sd(v) / mean(v),
+                             type = "cluster_labels_cv",
+                             title = paste0(name, ": Coefficient of Variation"))
+
+      # Figure: Intensity violin plot.
+      violin_plt <- list()
+      violin_plt$plt <-
+        ggplot(pl_exprs_long, aes_string(x = level_col, y = "Intensity")) +
+        geom_violin() +
+        coord_flip() +
+        facet_wrap(~ Channel, nrow = 1) +
+        labs(title = name, x = "Cell Subset", y = "Channel") +
+        theme(axis.text.x = element_blank(),
+              axis.ticks.x = element_blank(),
+              panel.background = element_blank())
+      violin_plt$height <- length(unique(pl_exprs_long[[level_col]])) * 20 + 20
+      violin_plt$width <- length(class_channels) * 75 + 20
+      level_report[[paste0(name, "_violin")]] <- violin_plt
     }
 
     report <- c(report, level_report)

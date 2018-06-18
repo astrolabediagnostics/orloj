@@ -13,6 +13,6 @@ reportNonCells(sample)
 An orloj report list with all of the required objects.
 }
 \description{
-Generates plots that report on events with extreme FSC-A values, high FSC-W
-values, or high LD values.
+For Aurora, generates plots that report on events with extreme FSC-A values,
+For mass cytometry, generate plot for live/dead.
 }

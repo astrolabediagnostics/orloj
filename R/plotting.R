@@ -305,7 +305,6 @@ plotHeatmap <- function(hm,
     theme(
       axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.4),
       legend.position = "bottom",
-      legend.text = element_text(angle = -90),
       panel.background = element_blank()
     )
 
@@ -313,9 +312,12 @@ plotHeatmap <- function(hm,
   if (!is.null(type)) {
     if (type == "cluster_labels") {
       plt <- plt +
-        scale_fill_gradient(labels = scales::percent,
-                            low = "white",
+        scale_fill_gradient(low = "white",
                             high = "#2F6148")
+    } else if (type == "cluster_labels_cv") {
+      plt <- plt +
+        scale_fill_gradient(low = "white",
+                            high = "red")
     } else if (type == "frequency") {
       plt <- plt +
         scale_fill_gradient(labels = scales::percent,
@@ -375,30 +377,27 @@ plotHeatmapAggregate <- function(data,
                                  x,
                                  y,
                                  value,
+                                 func = median,
                                  type = NULL,
                                  title = NULL,
                                  x_axis_order = NULL,
                                  y_axis_order = NULL,
                                  theme = NULL) {
   # Calculate mean values for each (x, y) combination.
-  hm <- wrapr::let(
-    alias = list(
-      X = x,
-      Y = y,
-      VALUE = value
-    ),
-    expr = {
-      data %>%
-        dplyr::group_by(X, Y) %>%
-        dplyr::summarize(MeanValue = mean(VALUE))
-    }
-  )
+  data$x <- data[[x]]
+  data$y <- data[[y]]
+  data$value <- data[[value]]
+  hm <- data %>%
+    dplyr::group_by(x, y) %>%
+    dplyr::summarize(value = func(value)) %>%
+    dplyr::ungroup()
+  colnames(hm) <- c(x, y, value)
 
   # Generate heatmap.
   plotHeatmap(hm,
               x = x,
               y = y,
-              value = "MeanValue",
+              value = value,
               type = type,
               title = title,
               x_axis_order = x_axis_order,
