@@ -5,7 +5,7 @@
 #' combinations:
 #' - Heatmap of channel median in that subset
 #' - Heatmap of channel coefficient of variation in that subset
-#' - Violin plots of channel distribution in each subset
+#' - Joy plots of channel distribution in each subset
 #'
 #' @param sample An Astrolabe sample.
 #' @param report_levels If true, intermediate level heatmaps will be exported
@@ -74,20 +74,19 @@ reportCellAssignments <- function(sample, report_levels = FALSE) {
                              type = "cluster_labels_cv",
                              title = paste0(name, ": Coefficient of Variation"))
 
-      # Figure: Intensity violin plot.
-      violin_plt <- list()
-      violin_plt$plt <-
-        ggplot(pl_exprs_long, aes_string(x = level_col, y = "Intensity")) +
-        geom_violin() +
-        coord_flip() +
+      # Figure: Intensity joy plot.
+      joy_plt <- list()
+      joy_plt$plt <-
+        ggplot(pl_exprs_long, aes_string(x = "Intensity", y = level_col)) +
+        ggridges::geom_density_ridges() +
         facet_wrap(~ Channel, nrow = 1) +
         labs(title = name, x = "Cell Subset", y = "Channel") +
         theme(axis.text.x = element_blank(),
               axis.ticks.x = element_blank(),
               panel.background = element_blank())
-      violin_plt$height <- length(unique(pl_exprs_long[[level_col]])) * 20 + 20
-      violin_plt$width <- length(class_channels) * 75 + 20
-      level_report[[paste0(name, "_violin")]] <- violin_plt
+      joy_plt$height <- length(unique(pl_exprs_long[[level_col]])) * 20 + 20
+      joy_plt$width <- length(class_channels) * 75 + 20
+      level_report[[paste0(name, "_joy")]] <- joy_plt
     }
 
     report <- c(report, level_report)

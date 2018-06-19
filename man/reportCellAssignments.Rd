@@ -18,5 +18,5 @@ For each level, the report includes the following over all (subset, channel)
 combinations:
 - Heatmap of channel median in that subset
 - Heatmap of channel coefficient of variation in that subset
-- Violin plots of channel distribution in each subset
+- Joy plots of channel distribution in each subset
 }
