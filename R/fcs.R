@@ -154,8 +154,11 @@ calculateFcsDigest <- function(sample, parameter_name = NULL) {
 identifyFcsInstrument <- function(flow_frame) {
   # Identify the instrument of a flow frame.
 
-  cyt <- tolower(flow_frame@description$`$CYT`)
+  cyt <- flow_frame@description$`$CYT`
 
+  if (is.null(cyt)) return("unknown")
+
+  cyt <- tolower(cyt)
   if (grepl("cytof", cyt)) {
     return("mass_cytometry")
   } else if (grepl("aurora", cyt)) {
