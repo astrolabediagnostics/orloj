@@ -81,6 +81,11 @@ isSample <- function(sample) {
   unlist(lapply(desc, function(s) gsub("_EQ", "", s)))
 }
 
+.removeCiteSeqFromDesc <- function(desc) {
+  # Temporary code. Remove the " (v)" suffix from channel descriptions.
+  gsub(" \\(v\\)$", "", desc)
+}
+
 #' Import FCS Channel Information.
 #'
 #' Import the TEXT section of an FCS file and extract channel names and
@@ -109,6 +114,8 @@ importFcsChannels <- function(filename) {
   # Remove masses and EQ suffix from channel descriptions.
   channels$Desc <- .removeMassFromDesc(channels$Desc)
   channels$Desc <- .removeEqFromDesc(channels$Desc)
+  # Temporary code. Remove the " (v)" suffix for CITEseq FCS files.
+  channels$Desc <- .removeCiteSeqFromDesc(channels$Desc)
   # NA/empty descriptions should copy from name.
   channels$Desc[is.na(channels$Desc) | channels$Desc == ""] <-
     channels$Name[is.na(channels$Desc) | channels$Desc == ""]
@@ -144,6 +151,26 @@ calculateFcsDigest <- function(sample, parameter_name = NULL) {
   digest::digest(list(desc = parameter_desc, name = parameter_name))
 }
 
+.identifyFcsInstrumentMissingCyt <- function(flow_frame) {
+  # Identify instrument if the cyt field is missing.
+  names <- flow_frame@parameters@data$name
+  desc <- flow_frame@parameters@data$desc
+
+  if (all(c("Ir191Di", "Ir193Di") %in% names)) {
+    # Look for iridium channels to identify mass cytometry.
+    return("mass_cytometry")
+  }
+
+  if (sum(grepl("_g$", desc)) > 5 & sum(grepl(" \\(v\\)$", desc)) > 5) {
+    # Temporary code. Heuristic: Look for the suffixes that are added to citeseq
+    # FCS files. Down the line, we should let the user upload CSV files, and
+    # include some sort of CITEseq flag.
+    return("citeseq")
+  }
+
+  return("unknown")
+}
+
 #' Identify FCS file instrument.
 #'
 #' Read the CYT field from the FCS file header.
@@ -156,7 +183,9 @@ identifyFcsInstrument <- function(flow_frame) {
 
   cyt <- flow_frame@description$`$CYT`
 
-  if (is.null(cyt)) return("unknown")
+  if (is.null(cyt)) {
+    return(.identifyFcsInstrumentMissingCyt(flow_frame))
+  }
 
   cyt <- tolower(cyt)
   if (grepl("cytof", cyt)) {
