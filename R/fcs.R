@@ -255,6 +255,8 @@ preprocess <- function(sample) {
     massPreprocess(sample)
   } else if (sample$instrument == "aurora") {
     auroraPreprocess(sample)
+  } else if (sample$instrument == "citeseq") {
+    citeseqPreprocess(sample)
   } else {
     stop("unknown sample instrument")
   }
