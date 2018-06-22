@@ -55,6 +55,9 @@ reportCellAssignments <- function(sample, report_levels = FALSE) {
         name <- level_col
       }
 
+      channel_order <-
+        gtools::mixedsort(as.character(unique(pl_exprs_long$Channel)))
+
       # Figure: Intensity heatmap.
       level_report[[name]] <-
         plotHeatmapAggregate(pl_exprs_long,
@@ -62,7 +65,8 @@ reportCellAssignments <- function(sample, report_levels = FALSE) {
                              y = level_col,
                              value = "Intensity",
                              type = "cluster_labels",
-                             title = name)
+                             title = name,
+                             x_axis_order = channel_order)
 
       # Figure: CV(Intensity) heatmap.
       level_report[[paste0(name, "_cv")]] <-
@@ -72,9 +76,12 @@ reportCellAssignments <- function(sample, report_levels = FALSE) {
                              value = "Intensity",
                              func = function(v) sd(v) / mean(v),
                              type = "cluster_labels_cv",
-                             title = paste0(name, ": Coefficient of Variation"))
+                             title = paste0(name, ": Coefficient of Variation"),
+                             x_axis_order = channel_order)
 
       # Figure: Intensity joy plot.
+      pl_exprs_long$Channel <-
+        factor(pl_exprs_long$Channel, levels = channel_order)
       joy_plt <- list()
       joy_plt$plt <-
         ggplot(pl_exprs_long, aes_string(x = "Intensity", y = level_col)) +
