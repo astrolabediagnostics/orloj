@@ -86,6 +86,14 @@ isSample <- function(sample) {
   gsub(" \\(v\\)$", "", desc)
 }
 
+.removeSpecialCasesFromDesc <- function(desc) {
+  # Remove special cases which were encountered during our work with various
+  # data sets.
+  desc[grep("CD56.*CD56", desc)] <- "CD56"
+  desc[grep("CD45RA.*CD45RA", desc)] <- "CD45RA"
+  desc
+}
+
 #' Import FCS Channel Information.
 #'
 #' Import the TEXT section of an FCS file and extract channel names and
@@ -114,6 +122,7 @@ importFcsChannels <- function(filename) {
   # Remove masses and EQ suffix from channel descriptions.
   channels$Desc <- .removeMassFromDesc(channels$Desc)
   channels$Desc <- .removeEqFromDesc(channels$Desc)
+  channels$Desc <- .removeSpecialCasesFromDesc(channels$Desc)
   # Temporary code. Remove the " (v)" suffix for CITEseq FCS files.
   channels$Desc <- .removeCiteSeqFromDesc(channels$Desc)
   # NA/empty descriptions should copy from name.
