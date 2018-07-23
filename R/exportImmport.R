@@ -164,6 +164,7 @@ exportImmport <- function(file_path, experiment, sample_id) {
     ass_profile_map$Assignment[unassigned_indices]
 
   # For each profile, get the markers that were used for that profile.
+  ass_profile_map$ProfileGate <- ""
   for (idx in seq(nrow(ass_profile_map))) {
     if (ass_profile_map$Assignment[idx] != ass_profile_map$Profile[idx]) {
       ass_profile_map$ProfileGate[idx] <-
