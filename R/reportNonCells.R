@@ -79,7 +79,7 @@ reportNonCells <- function(sample) {
   
   # Figure: DNA versus cisplatin.
   per_alive <- length(sample$live_indices) / nrow(exprs)
-  exprs$DNA <- exprs[, sample$dna_col_idx]
+  exprs$DNA <- exprs[[sample$dna_col_idx]]
   exprs$LiveDeadStaining <- exprs[[sample$livedead_col]]
   plt <-
     ggplot(mapping = aes(x = DNA, y = LiveDeadStaining)) +
