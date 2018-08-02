@@ -53,6 +53,7 @@ exportPlot <- function(filename, plt_list, dpi = 100) {
 #' @export
 exportReport <- function(dir, report, file_format = "png", dpi = 100) {
   for (plot_name in names(report)) {
+    plot_name_nice <- gsub("[^[:alnum:]]", "_", plot_name)
     plot_contents <- names(report[[plot_name]])
     if (is.null(plot_contents)) {
       # Skip empty plots.
@@ -60,11 +61,11 @@ exportReport <- function(dir, report, file_format = "png", dpi = 100) {
     } else if ("plt" %in% plot_contents || "data" %in% plot_contents) {
       # A single plot.
       plot_filename <-
-        file.path(dir, paste0(gsub("/", "_", plot_name), ".", file_format))
+        file.path(dir, paste0(gsub("/", "_", plot_name_nice), ".", file_format))
       exportPlot(plot_filename, report[[plot_name]], dpi)
     } else {
       # Another layer of plots, recursively export them.
-      plot_path <- file.path(dir, plot_name)
+      plot_path <- file.path(dir, plot_name_nice)
       dir.create(plot_path)
       exportReport(plot_path, report[[plot_name]], file_format, dpi)
     }

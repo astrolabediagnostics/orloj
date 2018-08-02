@@ -100,7 +100,7 @@ fcsExprs <- function(sample, keep_debris = FALSE) {
     keep_indices <- seq(nrow(exprs))
 
     if (is.null(sample$non_bead_indices)) {
-      sample$non_bead_incices <- keep_indices
+      sample$non_bead_indices <- keep_indices
     }
     if (is.null(sample$live_indices)) sample$live_indices <- keep_indices
     
