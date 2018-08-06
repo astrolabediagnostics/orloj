@@ -315,23 +315,23 @@ plotHeatmap <- function(hm,
       plt <- plt +
         scale_fill_gradient(low = "white",
                             high = "#2F6148",
-                            na.value = "grey50")
+                            na.value = "black")
     } else if (type == "cluster_labels_cv") {
       plt <- plt +
         scale_fill_gradient(low = "white",
                             high = "red",
-                            na.value = "grey50")
+                            na.value = "black")
     } else if (type == "frequency") {
       plt <- plt +
         scale_fill_gradient(labels = scales::percent,
                             low = "white",
                             high = "purple",
-                            na.value = "grey50")
+                            na.value = "black")
     } else if (type == "scaled_frequency") {
       plt <- plt +
         scale_fill_gradient(low = "white",
                             high = "goldenrod4",
-                            na.value = "grey50")
+                            na.value = "black")
     } else {
       stop("Unknown heatmap type")
     }
