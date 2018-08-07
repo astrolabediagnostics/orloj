@@ -139,6 +139,7 @@ fcsExprs <- function(sample, keep_debris = FALSE) {
 #' @param level Cell subset level. Currently supported levels are "Assignment"
 #' and "Profiling".
 #' @return Cell subset counts for that level.
+#' @export
 sampleCellSubsetCounts <- function(sample, level = "Assignment") {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
   if (!(level %in% c("Assignment", "Profile"))) {
@@ -159,6 +160,7 @@ sampleCellSubsetCounts <- function(sample, level = "Assignment") {
 #' @param level Cell subset level. Currently supported levels are "Assignment"
 #' and "Profiling".
 #' @return Cell subset channel intensity statistics for that level.
+#' @export
 sampleCellSubsetChannelStatistics <- function(sample, level = "Assignment") {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
   if (!(level %in% c("Assignment", "Profile"))) {

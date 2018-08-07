@@ -9,6 +9,7 @@ You can install orloj through the R command line. Please make sure to run R in a
 source("https://bioconductor.org/biocLite.R")
 biocLite("flowCore")
 biocLite("FlowSOM")
+biocLite("edgeR")
 ```
 
 2. Install devtools:
