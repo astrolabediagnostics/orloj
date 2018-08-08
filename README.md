@@ -195,7 +195,7 @@ And similarly for subset channel intensity statistics:
 # ... with 19,282 more rows
 ```
 
-> Remember that you can always supply `level = "Profile"` as a function parameter to access the `Profile` level instead of the default `Assignment` level.
+> Remember that you can always supply `level = "Profiling"` as a function parameter to access the `Profiling` level instead of the default `Assignment` level.
 
 Finally, you can access the differential abundance analysis results:
 
