@@ -4,13 +4,11 @@
 #' Load Astrolabe experiment.
 #'
 #' @param experiment_path Path to the Astrolabe experiment.
-#' @param astrolabe_path Internal parameter for Astrolabe Diagnostics staff.
 #' @return Astrolabe experiment.
 #' @export
-loadExperiment <- function(experiment_path, astrolabe_path = NULL) {
+loadExperiment <- function(experiment_path) {
   experiment <- readRDS(file.path(experiment_path, "config.RDS"))
 
-  experiment$astrolabe_path <- astrolabe_path
   experiment$analysis_path <- file.path(experiment_path, "analysis")
   experiment$reports_path <- file.path(experiment_path, "reports")
   experiment$samples_path <- file.path(experiment_path, "samples")
