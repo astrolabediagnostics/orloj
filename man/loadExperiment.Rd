@@ -4,10 +4,12 @@
 \alias{loadExperiment}
 \title{Load Astrolabe experiment.}
 \usage{
-loadExperiment(experiment_path)
+loadExperiment(experiment_path, astrolabe_path = NULL)
 }
 \arguments{
 \item{experiment_path}{Path to the Astrolabe experiment.}
+
+\item{astrolabe_path}{Internal parameter for Astrolabe Diagnostics staff.}
 }
 \value{
 Astrolabe experiment.
