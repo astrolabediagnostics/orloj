@@ -166,19 +166,3 @@ differentialAbundanceAnalysis <- function(experiment, level = "Assignment") {
     }
   })
 }
-
-#' Quality control metrics.
-#'
-#' Load the experiment quality control metrics.
-#'
-#' @param experiment An Astrolabe experiment.
-#' @return List of different quality control metrics.
-#' @export
-experimentQcMetrics <- function(experiment) {
-  qc_metrics_filename <-
-    file.path(experiment$analysis_path, "combine_qc_metrics.RDS")
-  if (!file.exists(qc_metrics_filename)) {
-    stop(paste0(qc_metrics_filename, " not found"))
-  }
-  readRDS(qc_metrics_filename)
-}
