@@ -44,18 +44,31 @@ experimentSummary <- function(experiment) {
   }
 }
 
+.chooseLevel <- function(experiment) {
+  # Choose default level for experiment.
+  if (is.null(experiment$organism)) {
+    return("Assignment")
+  } else if (experiment$organism == "profiling_only") {
+    return("Profiling")
+  } else {
+    return("Assignment")
+  }
+}
+
 #' Experiment cell subset counts.
 #'
 #' Cell subset counts for all of the samples in an experiment.
 #'
 #' @param experiment An Astrolabe experiment.
 #' @param level Cell subset level. Currently supported levels are "Assignment"
-#' and "Profiling".
+#' and "Profiling". The default is "Profiling" for Profiling Only experiments
+#' and "Assignment" otherwise.
 #' @return Cell subset counts for that level.
 #' @export
-experimentCellSubsetCounts <- function(experiment, level = "Assignment") {
+experimentCellSubsetCounts <- function(experiment,
+                                       level = .chooseLevel(experiment)) {
   if (!(level %in% c("Assignment", "Profiling"))) {
-    stop("level is not \"Assignment\" or \"Profiling\"")
+    stop('level is not "Assignment" or "Profiling"')
   }
   if (level == "Profiling") level = "Profile"
 
@@ -67,6 +80,10 @@ experimentCellSubsetCounts <- function(experiment, level = "Assignment") {
   aggregate_statistics <- readRDS(aggregate_statistics_filename)
 
   counts <- aggregate_statistics$subset_cell_counts
+  if (!(level %in% counts$Parent)) {
+    stop("level not found in cell subset counts")
+  }
+
   counts <- counts %>%
     dplyr::filter(Parent == level) %>%
     dplyr::select(-Parent)
@@ -81,11 +98,12 @@ experimentCellSubsetCounts <- function(experiment, level = "Assignment") {
 #'
 #' @param experiment An Astrolabe experiment.
 #' @param level Cell subset level. Currently supported levels are "Assignment"
-#' and "Profiling".
+#' and "Profiling". The default is "Profiling" for Profiling Only experiments
+#' and "Assignment" otherwise.
 #' @return Cell subset channel statistics for that level.
 #' @export
 experimentCellSubsetChannelStatistics <- function(experiment,
-                                                  level = "Assignment") {
+                                                  level = .chooseLevel(experiment)) {
   if (!(level %in% c("Assignment", "Profiling"))) {
     stop("level is not \"Assignment\" or \"Profiling\"")
   }
@@ -99,6 +117,10 @@ experimentCellSubsetChannelStatistics <- function(experiment,
   aggregate_statistics <- readRDS(aggregate_statistics_filename)
 
   stats <- aggregate_statistics$subset_channel_statistics
+  if (!(level %in% stats$Parent)) {
+    stop("level not found in cell subset channel statistics")
+  }
+
   stats <- stats %>%
     dplyr::filter(Parent == level) %>%
     dplyr::select(-Parent)
@@ -117,7 +139,8 @@ experimentCellSubsetChannelStatistics <- function(experiment,
 #' and "Profiling".
 #' @return Differential abundance analysis list.
 #' @export
-differentialAbundanceAnalysis <- function(experiment, level = "Assignment") {
+differentialAbundanceAnalysis <- function(experiment,
+                                          level = .chooseLevel(experiment)) {
   if (!(level %in% c("Assignment", "Profiling"))) {
     stop("level is not \"Assignment\" or \"Profiling\"")
   }
