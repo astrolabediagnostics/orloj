@@ -218,12 +218,12 @@ identifyFcsInstrument <- function(flow_frame) {
 #'
 #' @param filename The name of the FCS file to import.
 #' @param flow_frame FlowCore flow frame.
+#' @param instrument The identified instrument for this sample.
 #' @seealso \code{\link{isSample}}, \code{\link{fcsExprs}}
 #' @return FCS data, in orloj internal FCS list format.
 #' @export
-convertFlowFrame <- function(filename, flow_frame) {
+convertFlowFrame <- function(filename, flow_frame, instrument) {
   # Import flow data and channels information.
-  instrument <- identifyFcsInstrument(flow_frame)
   channels <- importFcsChannels(filename)
 
   # Apply compensation if necessary.
