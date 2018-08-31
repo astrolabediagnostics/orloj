@@ -8,18 +8,21 @@
 #' - Joy plots of channel distribution in each subset
 #'
 #' @param sample An Astrolabe sample.
+#' @param channels List of channels to include in report.
 #' @param report_levels If true, intermediate level heatmaps will be exported
 #' in addition to terminal level heatmaps.
 #' @export
-reportCellAssignments <- function(sample, report_levels = FALSE) {
+reportCellAssignments <- function(sample,
+                                  channels = NULL,
+                                  report_levels = FALSE) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   exprs <- fcsExprs(sample)
   levels <- getCellSubsetLevels(sample)
-  class_channels <- sample$cell_assignments$class_channels
+  if (is.null(channels)) channels <- sample$cell_assignments$class_channels
 
-  if (!all(class_channels %in% colnames(exprs))) {
-    stop("At least one class channel is missing from the exprs data frame")
+  if (!all(channels %in% colnames(exprs))) {
+    stop("At least one channel is missing from the exprs data frame")
   }
 
   if (!report_levels) {
@@ -43,7 +46,7 @@ reportCellAssignments <- function(sample, report_levels = FALSE) {
       # Get data for this parent label and convert to long format.
       pl_indices <- level_exprs[[parent_col]] == pl_label
       pl_exprs <-
-        level_exprs[pl_indices, c(class_channels, level_col)]
+        level_exprs[pl_indices, c(channels, level_col)]
       pl_exprs_long <-
         reshape2::melt(pl_exprs,
                        id.vars = level_col,
@@ -92,7 +95,7 @@ reportCellAssignments <- function(sample, report_levels = FALSE) {
               axis.ticks.x = element_blank(),
               panel.background = element_blank())
       joy_plt$height <- length(unique(pl_exprs_long[[level_col]])) * 20 + 20
-      joy_plt$width <- length(class_channels) * 75 + 20
+      joy_plt$width <- length(channels) * 75 + 20
       level_report[[paste0(name, "_joy")]] <- joy_plt
     }
 

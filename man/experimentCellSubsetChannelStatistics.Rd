@@ -4,13 +4,15 @@
 \alias{experimentCellSubsetChannelStatistics}
 \title{Experiment cell subset channel statistics.}
 \usage{
-experimentCellSubsetChannelStatistics(experiment, level = "Assignment")
+experimentCellSubsetChannelStatistics(experiment,
+  level = .chooseLevel(experiment))
 }
 \arguments{
 \item{experiment}{An Astrolabe experiment.}
 
 \item{level}{Cell subset level. Currently supported levels are "Assignment"
-and "Profiling".}
+and "Profiling". The default is "Profiling" for Profiling Only experiments
+and "Assignment" otherwise.}
 }
 \value{
 Cell subset channel statistics for that level.

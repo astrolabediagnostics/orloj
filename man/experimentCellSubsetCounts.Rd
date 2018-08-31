@@ -4,13 +4,14 @@
 \alias{experimentCellSubsetCounts}
 \title{Experiment cell subset counts.}
 \usage{
-experimentCellSubsetCounts(experiment, level = "Assignment")
+experimentCellSubsetCounts(experiment, level = .chooseLevel(experiment))
 }
 \arguments{
 \item{experiment}{An Astrolabe experiment.}
 
 \item{level}{Cell subset level. Currently supported levels are "Assignment"
-and "Profiling".}
+and "Profiling". The default is "Profiling" for Profiling Only experiments
+and "Assignment" otherwise.}
 }
 \value{
 Cell subset counts for that level.
