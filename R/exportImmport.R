@@ -34,6 +34,8 @@ exportImmport <- function(file_path, experiment, sample_id) {
   sample <- loadSample(experiment, sample_id = sample_id)
   exprs <- fcsExprs(sample)
 
+  if (nrow(exprs) == 0) return()
+
   # Calculate count and percent over all profiling subsets.
   stats <- .calculateCountPercent(exprs, value_col, unit_col)
   # Calculate mean channel intensity over all (profile, channel) pairs.
