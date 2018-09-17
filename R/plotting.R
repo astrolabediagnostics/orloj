@@ -9,9 +9,13 @@
 #' extension decides on the file type (such as png, svg, etc.).
 #' @param plt_list An orloj plot list.
 #' @param dpi Plot resolution. Only applies only to raster output types.
+#' @param verbose Whether to provide updates to console.
 #' @import ggplot2
 #' @export
-exportPlot <- function(filename, plt_list, dpi = 100) {
+exportPlot <- function(filename, plt_list, dpi = 100, verbose = FALSE) {
+  # Maximum allowed dimension size.
+  max_dim <- 100
+
   if (is.null(plt_list$plt)) {
     if (is.null(plt_list$data)) {
       stop("plt_list object must include either plt or data or both")
@@ -27,15 +31,31 @@ exportPlot <- function(filename, plt_list, dpi = 100) {
   }
 
   if (!is.null(plt_list$plt)) {
+    if (verbose) message("exporting figure")
+
+    # If plot is too big, rescale it.
+    width <- plt_list$width / dpi
+    height <- plt_list$height / dpi
+    if (width > max_dim) {
+      if (verbose) message("\twidth too high, setting to max_dim")
+      width <- max_dim
+    }
+    if (height > max_dim) {
+      if (verbose) message("\theight too high, setting to max_dim")
+      height <- max_dim
+    }
+    if (verbose) message(paste0("\twidth = ", width, ", height = ", height))
+
     # Export plot.
     ggsave(filename,
            plt_list$plt,
-           width = plt_list$width / dpi,
-           height = plt_list$height / dpi,
+           width = width,
+           height = height,
            limitsize = FALSE)
   }
   if (!is.null(plt_list$data)) {
     # Export data as CSV.
+    if (verbose) message("exporting data")
     write.csv(plt_list$data, paste0(filename, ".csv"))
   }
 }
@@ -49,25 +69,36 @@ exportPlot <- function(filename, plt_list, dpi = 100) {
 #' @param dir The name of the dir where figures are to be exported.
 #' @param report An orloj report.
 #' @param file_format Exported plots file format (such as png, svg, etc.).
+#' @param verbose Whether to provide updates to console.
 #' @inherit exportPlot
 #' @export
-exportReport <- function(dir, report, file_format = "png", dpi = 100) {
+exportReport <- function(dir,
+                         report,
+                         file_format = "png",
+                         dpi = 100,
+                         verbose = FALSE) {
   for (plot_name in names(report)) {
+    if (verbose) message(plot_name)
+
     plot_name_nice <- gsub("[^[:alnum:]]", "_", plot_name)
     plot_contents <- names(report[[plot_name]])
     if (is.null(plot_contents)) {
       # Skip empty plots.
+      if (verbose) message("\tskipping")
       next
     } else if ("plt" %in% plot_contents || "data" %in% plot_contents) {
       # A single plot.
+      if (verbose) message("\texporting single plot")
       plot_filename <-
         file.path(dir, paste0(gsub("/", "_", plot_name_nice), ".", file_format))
-      exportPlot(plot_filename, report[[plot_name]], dpi)
+      exportPlot(plot_filename, report[[plot_name]], dpi, verbose)
     } else {
       # Another layer of plots, recursively export them.
+      if (verbose) message("\trecursion into new layer")
       plot_path <- file.path(dir, plot_name_nice)
       dir.create(plot_path)
-      exportReport(plot_path, report[[plot_name]], file_format, dpi)
+      exportReport(plot_path, report[[plot_name]], file_format, dpi, verbose)
+      if (verbose) message("")
     }
   }
 }

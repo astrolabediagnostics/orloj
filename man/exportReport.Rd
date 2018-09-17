@@ -4,7 +4,7 @@
 \alias{exportReport}
 \title{Export an orloj report.}
 \usage{
-exportReport(dir, report, file_format = "png", dpi = 100)
+exportReport(dir, report, file_format = "png", dpi = 100, verbose = FALSE)
 }
 \arguments{
 \item{dir}{The name of the dir where figures are to be exported.}
@@ -14,6 +14,8 @@ exportReport(dir, report, file_format = "png", dpi = 100)
 \item{file_format}{Exported plots file format (such as png, svg, etc.).}
 
 \item{dpi}{Plot resolution. Only applies only to raster output types.}
+
+\item{verbose}{Whether to provide updates to console.}
 }
 \description{
 Exports an orloj report to a destination directory. Reports take orloj data

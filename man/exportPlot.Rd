@@ -4,7 +4,7 @@
 \alias{exportPlot}
 \title{Export an orloj plot list.}
 \usage{
-exportPlot(filename, plt_list, dpi = 100)
+exportPlot(filename, plt_list, dpi = 100, verbose = FALSE)
 }
 \arguments{
 \item{filename}{The name of the file to be exported. Note that the file
@@ -13,6 +13,8 @@ extension decides on the file type (such as png, svg, etc.).}
 \item{plt_list}{An orloj plot list.}
 
 \item{dpi}{Plot resolution. Only applies only to raster output types.}
+
+\item{verbose}{Whether to provide updates to console.}
 }
 \description{
 Exports an orloj plot list, applying any of the parameters that it includes.
