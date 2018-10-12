@@ -54,3 +54,28 @@ addBackticks <- function(str) {
   }
 }
 
+#' Convert a string into a filename-friendly format.
+#'
+#' Convert "+" to "pos" and "-" to "neg". Remove paranthesis. Convert any
+#' non-alphanumeric character to underscore.
+#'
+#' @param str A string.
+#' @return A filename-friendly format of that string.
+#' @export
+filenameify <- function(str) {
+  str <- gsub("\\+$", "pos", str)
+  str <- gsub("\\+ ", "pos ", str)
+  str <- gsub("\\+)", "pos)", str)
+
+  str <- gsub("\\-$", "neg", str)
+  str <- gsub("\\- ", "neg ", str)
+  str <- gsub("\\-)", "neg)", str)
+
+  str <- gsub("\\)", "", str)
+  str <- gsub("\\(", "", str)
+
+  str <- gsub("[^[:alnum:]]", "_", str)
+
+  str
+}
+
