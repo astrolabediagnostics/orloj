@@ -4,16 +4,20 @@
 \alias{fcsExprs}
 \title{Get expression data from sample.}
 \usage{
-fcsExprs(sample, keep_debris = FALSE)
+fcsExprs(sample, keep_beads = FALSE, keep_debris = FALSE,
+  keep_dead = FALSE)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}
 
-\item{keep_debris}{Whether events in the Debris and Root/Unassigned labels
-should be kept.}
+\item{keep_beads}{Whether bead events should be kept.}
+
+\item{keep_debris}{Whether debris and doublet events should be kept.}
+
+\item{keep_dead}{Whether dead events should be kept.}
 }
 \value{
-Expression (and analyses) data frame.
+Expression data frame.
 }
 \description{
 Retrieves the exprs data frame from the sample, incorporating all relevant

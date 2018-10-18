@@ -6,27 +6,23 @@
 #' @return An orloj report list with all of the required objects.
 #' @export
 reportBeads <- function(sample) {
-  # TODO statistics report
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
-  # Only mass cytometry data has beads.
-  if (sample$instrument != "mass_cytometry") return(NULL);
+  exprs <-
+    fcsExprs(sample, keep_beads = TRUE, keep_dead = TRUE, keep_debris = TRUE)
 
-  if (nrow(sample$exprs) == length(sample$non_bead_indices)) {
-    # No beads were found, nothing to report.
-    return(NULL);
-  }
+  # No beads were found, nothing to report.
+  if (sum(exprs$Bead) == 0) return(NULL)
 
-  # Get expression data and mark beads.
+  # Set up expression with standard bead channel names.
   bead_channel_indices <- match(beadChannelNames(), sample$parameter_name)
   existing_beads <- which(!is.na(bead_channel_indices))
   bead_channel_indices <- bead_channel_indices[existing_beads]
   bead_channel_names <- beadChannelNames()[existing_beads]
 
-  exprs <- sample$exprs[, bead_channel_indices]
-  colnames(exprs) <- bead_channel_names
-  exprs$Bead <- TRUE
-  exprs$Bead[sample$non_bead_indices] <- FALSE
+  bead_channel_idx <- which(colnames(exprs) == "Bead")
+  exprs <- exprs[, c(bead_channel_indices, bead_channel_idx)]
+  colnames(exprs) <- c(bead_channel_names, "Bead")
 
   # Figure: First bead channel versus all of the other bead channels
   x <- bead_channel_names[1]

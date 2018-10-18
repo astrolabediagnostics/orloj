@@ -6,9 +6,7 @@
 #' 
 #' @return Vector of Astrolabe debris labels.
 #' @export
-astrolabeDebrisLabels <- function() {
-  c("Debris", "Root_unassigned")
-}
+astrolabeDebrisLabels <- function() c("Debris")
 
 # FCS File Interaction --------------------------------------------------------
 

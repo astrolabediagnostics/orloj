@@ -2,7 +2,7 @@
 #'
 #' For Aurora, generates plots that report on events with extreme FSC-A values,
 # high FSC-W values, or high LD values.
-#' For mass cytometry, generate plot for live/dead.
+#' For mass cytometry, generate plot for debris and live/dead.
 #'
 #' @param sample An Astrolabe sample.
 #' @return An orloj report list with all of the required objects.
@@ -24,6 +24,8 @@ reportNonCells <- function(sample) {
     # No non-cell indices found, nothing to report.
     return(NULL)
   }
+
+  stop("This code does not use the new fcsExprs structure")
 
   exprs <- orloj::fcsExprs(sample, keep_debris = TRUE)
 
@@ -60,39 +62,93 @@ reportNonCells <- function(sample) {
 }
 
 .reportNonCellsMassCytometry <- function(sample) {
-  exprs <- sample$exprs
-  
-  if (is.null(sample$live_indices) | is.null(sample$livedead_col)) {
-    # Reverse compatibility: Older experiments did not have live_indices.
-    sample$live_indices <- seq(nrow(exprs))
-  }
-  
-  if (length(sample$live_indices) == nrow(exprs)) {
-    # All cells are alive, nothing to report.
-    return(NULL)
-  }
-  
+  exprs <- fcsExprs(sample, keep_debris = TRUE, keep_dead = TRUE)
+
+  # Set standard naming for Event Length and DNA columns.
+  standard_channels <- findStandardMassCytometryChannels(sample)
+  event_length_idx <- standard_channels$event_length_idx
+  dna191_idx <- standard_channels$dna191_idx
+  colnames(exprs)[event_length_idx] <- "Event Length"
+  colnames(exprs)[dna191_idx] <- "DNA"
+
+  # Decide on axis limits.
+  dna_lim <- c(0, ceiling(max(exprs[[dna191_idx]])))
+  event_length_lim <- c(0, ceiling(max(exprs[[event_length_idx]])))
+
   report <- list()
+
+  if (any(exprs$Debris)) {
+    # Generate debris and doublet figure.
+    exprs$EventType <- "Cell"
+    exprs$EventType[sample$debris_indices] <- "Debris"
+    exprs$EventType[sample$doublet_indices] <- "Doublet"
+    exprs$EventType <-
+      factor(exprs$EventType, levels = c("Cell", "Debris", "Doublet"))
+
+    # Figure: Event Length versus DNA.
+    plt <- 
+      ggplot(exprs, aes(x = `Event Length`, y = DNA)) +
+      geom_point(alpha = 0.1, color = "grey70", size = 0) +
+      geom_point(data = exprs[exprs$EventType != "Cell", ],
+                 mapping = aes(color = EventType), alpha = 0.1, size = 1) +
+      labs(title = "Preprocessing Debris and Doublets", x = "Event Length") +
+      xlim(event_length_lim) + ylim(dna_lim) +
+      theme(aspect.ratio = 1,
+            legend.position = "bottom") +
+      guides(color = guide_legend(override.aes = list(size = 2, alpha = 1)))
+      
+    report$PreprocessingDebris <- list(plt = plt, width = 600, height = 600)
+  }
+
+
+  # Generate Ek'balam debris and Root_unassigned figure.
+  exprs_clean <- exprs[!exprs$Debris & !exprs$Dead, ]
+  exprs_clean$EventType <- "Cell"
+  exprs_clean$EventType[exprs_clean$Assignment == "Debris"] <- "Debris"
+  exprs_clean$EventType[exprs_clean$Assignment == "Root_unassigned"] <-
+    "Unassigned"
+  exprs_clean$EventType <-
+    factor(exprs_clean$EventType, levels = c("Cell", "Debris", "Unassigned"))
+
+  # Figure: Event Length versus DNA.
+  plt <- 
+    ggplot(exprs_clean, aes(x = `Event Length`, y = DNA)) +
+    geom_point(alpha = 0.1, color = "grey70", size = 0) +
+    geom_point(data = exprs_clean[exprs_clean$EventType != "Cell", ],
+               mapping = aes(color = EventType), alpha = 0.1, size = 1) +
+    labs(title = "Cell Labeling Debris and Unassigned", x = "Event Length") +
+    xlim(event_length_lim) + ylim(dna_lim) +
+    theme(aspect.ratio = 1,
+          legend.position = "bottom") +
+    guides(color = guide_legend(override.aes = list(size = 2, alpha = 1)))
+    
+  report$CellLabelingDebris <- list(plt = plt, width = 600, height = 600)
+
   
-  exprs$EventType <- "Dead"
-  exprs$EventType[sample$live_indices] <- "Alive"
+  if (any(exprs$Dead)) {
+    # Generate live/dead report.
+    exprs$EventType <- "Alive"
+    exprs$EventType[exprs$Dead] <- "Dead"
+    exprs$EventType <- factor(exprs$EventType, levels = c("Alive", "Dead"))
   
-  # Figure: DNA versus cisplatin.
-  per_alive <- length(sample$live_indices) / nrow(exprs)
-  exprs$DNA <- exprs[[sample$dna_col_idx]]
-  exprs$LiveDeadStaining <- exprs[[sample$livedead_col]]
-  plt <-
-    ggplot(mapping = aes(x = DNA, y = LiveDeadStaining)) +
-    geom_point(data = exprs, alpha = 0.1, color = "grey70", size = 0) +
-    geom_point(data = exprs[sample$live_indices, ],
-               alpha = 0.5, color = "#1C3C44", size = 1) +
-    geom_density2d(data = exprs, color = "grey20") +
-    labs(title =
-           paste0(prettyNum(length(sample$live_indices), big.mark = ","), " (",
-                  round(per_alive * 100, 1), "%) live events"),
-         y = "Live/Dead Staining (Pt195)") +
-    theme(aspect.ratio = 1)
-  report$LiveDead <- list(plt = plt, width = 600, height = 600)
-  
+    # Figure: DNA versus cisplatin.
+    n_alive <- sum(!exprs$Dead)
+    per_alive <- mean(!exprs$Dead)
+    exprs$DNA <- exprs[[sample$dna_col_idx]]
+    exprs$LiveDeadStaining <- exprs[[sample$livedead_col]]
+    plt <-
+      ggplot(mapping = aes(x = DNA, y = LiveDeadStaining)) +
+      geom_point(data = exprs, alpha = 0.1, color = "grey70", size = 0) +
+      geom_point(data = exprs[sample$live_indices, ],
+                 alpha = 0.5, color = "#1C3C44", size = 1) +
+      geom_density2d(data = exprs, color = "grey20") +
+      labs(title =
+             paste0(prettyNum(n_alive, big.mark = ","), " (",
+                    round(per_alive * 100, 1), "%) live events"),
+           y = "Live/Dead Staining (Pt195)") +
+      theme(aspect.ratio = 1)
+    report$LiveDead <- list(plt = plt, width = 600, height = 600)
+  }
+    
   report
 }

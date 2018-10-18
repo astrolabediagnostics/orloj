@@ -73,12 +73,11 @@ sampleSummary <- function(sample) {
     "An Astrolabe sample with ", nrow(exprs), " cells",
     " and ", ncol(sample$exprs), " channels\n"
   ))
-  n_debris <-
-    sum(sample$cell_assignments$cell_assignments$Assignment == "Debris")
   cat(paste0(
-    nrow(sample$exprs) - length(sample$non_bead_indices), " bead events",
-    " and ", n_debris, " debris events\n"
-  ))
+    sum(exprs$Bead), " beads, ",
+    sum(exprs$Debris), " debris and doublets, ",
+    "and ",
+    sum(exprs$Dead), " dead cells\n"))
 }
 
 #' Get expression data from sample.
@@ -87,46 +86,74 @@ sampleSummary <- function(sample) {
 #' pre-processing and Astrolabe analyses.
 #'
 #' @param sample An Astrolabe sample.
-#' @param keep_debris Whether events in the Debris and Root/Unassigned labels
-#' should be kept.
-#' @return Expression (and analyses) data frame.
+#' @param keep_beads Whether bead events should be kept.
+#' @param keep_debris Whether debris and doublet events should be kept.
+#' @param keep_dead Whether dead events should be kept.
+#' @return Expression data frame.
 #' @export
-fcsExprs <- function(sample, keep_debris = FALSE) {
+fcsExprs <- function(sample,
+                     keep_beads = FALSE,
+                     keep_debris = FALSE,
+                     keep_dead = FALSE) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   exprs <- sample$exprs
 
-  # Mass cytometry: Filter to non-bead, live events only.
-  if (sample$instrument == "mass_cytometry") {
-    keep_indices <- seq(nrow(exprs))
+  exprs$Bead    <- FALSE
+  exprs$Dead    <- FALSE
+  exprs$Debris  <- FALSE
 
-    if (is.null(sample$non_bead_indices)) {
-      sample$non_bead_indices <- keep_indices
-    }
-    if (is.null(sample$live_indices)) sample$live_indices <- keep_indices
-    
-    keep_indices <- intersect(sample$non_bead_indices, sample$live_indices)
-    exprs <- exprs[keep_indices, ]
+  # Mark beads.
+  if (!is.null(sample$non_bead_indices)) {
+    exprs$Bead <- TRUE
+    exprs$Bead[sample$non_bead_indices] <- FALSE
+  }
+
+  # Mark debris and doublets.
+  if (!is.null(sample$debris_indices)) {
+    exprs$Debris[sample$non_bead_indices[sample$debris_indices]] <- TRUE
+  }
+  if (!is.null(sample$doublet_indices)) {
+    exprs$Debris[sample$non_bead_indices[sample$doublet_indices]] <- TRUE
+  }
+
+  # Mark dead.
+  if (!is.null(sample$live_indices)) {
+    exprs$Dead <- TRUE
+    exprs$Dead[sample$live_indices] <- FALSE
   }
 
   # Incorporate cell assignments.
   if (!is.null(sample$cell_assignments)) {
-    cell_assignments <- sample$cell_assignments
-    exprs <- cbind(exprs, cell_assignments$cell_assignments)
-
-    # Incorporate subset profiling.
-    if (!is.null(sample$subset_profiling_assignment)) {
-      exprs$Profile <- exprs$Assignment
-      exprs$Profile[!(exprs$Assignment %in% astrolabeDebrisLabels())] <-
-        sample$subset_profiling_assignment$Profile
-      exprs$Profile[is.na(exprs$Profile)] <-
-        exprs$Assignment[is.na(exprs$Profile)]
+    cell_assignments <- sample$cell_assignments$cell_assignments
+    ca_indices <- which(!exprs$Bead & !exprs$Dead & !exprs$Debris)
+    if (length(ca_indices) != nrow(cell_assignments)) {
+      stop("number of rows in cell_assignments different than expected")
     }
-
-    if (!keep_debris) {
-      exprs <- dplyr::filter(exprs, !(Assignment %in% astrolabeDebrisLabels()))
+    # Copy one column at a time.
+    for (col_name in colnames(cell_assignments)) {
+      exprs[[col_name]] <- NA
+      exprs[ca_indices, col_name] <- cell_assignments[[col_name]]
     }
+    # Update debris based on cell assignment.
+    exprs$Debris[exprs$Assignment %in% astrolabeDebrisLabels()] <- TRUE
   }
+
+  # Incorporate profiling.
+  if (!is.null(sample$subset_profiling_assignment)) {
+    profile <- sample$subset_profiling_assignment$Profile
+    profile_indices <- which(!exprs$Bead & !exprs$Dead & !exprs$Debris)
+    if (length(profile_indices) != length(profile)) {
+      stop("length of profile different than expected")
+    }
+    exprs$Profile <- exprs$Assignment
+    exprs$Profile[profile_indices] <- profile
+  }
+
+  # Remove any unnecessary events.
+  if (!keep_beads) exprs <- exprs[!exprs$Bead, ]
+  if (!keep_debris) exprs <- exprs[!exprs$Debris, ]
+  if (!keep_dead) exprs <- exprs[!exprs$Dead, ]
 
   exprs
 }
