@@ -334,6 +334,7 @@ plotHeatmap <- function(hm,
   plt <-
     ggplot(hm, aes_string(x = x_bt, y = y_bt)) +
     geom_tile(aes_string(fill = value_bt), color = "white") +
+    coord_equal() +
     theme(
       axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.4),
       legend.position = "bottom",
@@ -345,7 +346,7 @@ plotHeatmap <- function(hm,
     if (type == "cluster_labels") {
       plt <- plt +
         scale_fill_gradient(low = "white",
-                            high = "#2F6148",
+                            high = "#003300",
                             na.value = "black")
     } else if (type == "cluster_labels_cv") {
       plt <- plt +
@@ -375,12 +376,12 @@ plotHeatmap <- function(hm,
   # Decide on width and height.
   width <-
     15 + # Y-axis title
-    max(nchar(as.character(y_axis_order))) * 15 + # Longest Y-axis label
+    max(nchar(as.character(y_axis_order))) * 10 + # Longest Y-axis label
     15 * length(x_axis_order) # X-axis tiles
   height <-
     15 + # X-axis title
     30 + # Figure title
-    max(nchar(as.character(x_axis_order))) * 15 + # Longest X-axis label
+    max(nchar(as.character(x_axis_order))) * 10 + # Longest X-axis label
     15 * length(y_axis_order) + # Y-axis tiles
     60 # Legend
 
