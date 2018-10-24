@@ -77,52 +77,48 @@ reportNonCells <- function(sample) {
 
   report <- list()
 
-  if (any(exprs$Debris)) {
-    # Generate debris and doublet figure.
-    exprs$EventType <- "Cell"
-    exprs$EventType[sample$debris_indices] <- "Debris"
-    exprs$EventType[sample$doublet_indices] <- "Doublet"
-    exprs$EventType <-
-      factor(exprs$EventType, levels = c("Cell", "Debris", "Doublet"))
+  # Generate preprocessing debris and doublet figure.
+  exprs$EventType <- "Cell"
+  exprs$EventType[sample$debris_indices] <- "Debris"
+  exprs$EventType[sample$doublet_indices] <- "Doublet"
+  exprs$EventType <-
+    factor(exprs$EventType, levels = c("Cell", "Debris", "Doublet"))
 
-    # Figure: Event Length versus DNA.
-    plt <- 
-      ggplot(exprs, aes(x = `Event Length`, y = DNA)) +
-      geom_point(alpha = 0.1, color = "grey70", size = 0) +
-      geom_point(data = exprs[exprs$EventType != "Cell", ],
-                 mapping = aes(color = EventType), alpha = 0.1, size = 1) +
-      labs(title = "Preprocessing Debris and Doublets", x = "Event Length") +
-      xlim(event_length_lim) + ylim(dna_lim) +
-      theme(aspect.ratio = 1,
-            legend.position = "bottom") +
-      guides(color = guide_legend(override.aes = list(size = 2, alpha = 1)))
-      
-    report$PreprocessingDebris <- list(plt = plt, width = 600, height = 600)
-  }
+  # Figure: Event Length versus DNA.
+  plt <- 
+    ggplot(exprs, aes(x = `Event Length`, y = DNA)) +
+    geom_point(alpha = 0.1, color = "grey70", size = 1) +
+    labs(title = "Preprocessing Debris and Doublets", x = "Event Length") +
+    xlim(event_length_lim) + ylim(dna_lim) +
+    facet_wrap(~ EventType) +
+    theme(aspect.ratio = 1)
+  width <- length(unique(exprs$EventType)) * 600
+    
+  report$PreprocessingDebris <- list(plt = plt, width = width, height = 600)
 
 
   # Generate Ek'balam debris and Root_unassigned figure.
-  exprs_clean <- exprs[!exprs$Debris & !exprs$Dead, ]
+  exprs_clean <-
+    exprs[setdiff(seq(nrow(exprs)),
+                  c(sample$debris_indices, sample$doublet_indices)), ]
   exprs_clean$EventType <- "Cell"
-  exprs_clean$EventType[exprs_clean$Assignment == "Debris"] <- "Debris"
+  exprs_clean$EventType[exprs_clean$Assignment == "Debris"] <- "No Signal"
   exprs_clean$EventType[exprs_clean$Assignment == "Root_unassigned"] <-
     "Unassigned"
   exprs_clean$EventType <-
-    factor(exprs_clean$EventType, levels = c("Cell", "Debris", "Unassigned"))
+    factor(exprs_clean$EventType, levels = c("Cell", "No Signal", "Unassigned"))
 
   # Figure: Event Length versus DNA.
   plt <- 
     ggplot(exprs_clean, aes(x = `Event Length`, y = DNA)) +
-    geom_point(alpha = 0.1, color = "grey70", size = 0) +
-    geom_point(data = exprs_clean[exprs_clean$EventType != "Cell", ],
-               mapping = aes(color = EventType), alpha = 0.1, size = 1) +
+    geom_point(alpha = 0.1, color = "grey70", size = 1) +
     labs(title = "Cell Labeling Debris and Unassigned", x = "Event Length") +
     xlim(event_length_lim) + ylim(dna_lim) +
-    theme(aspect.ratio = 1,
-          legend.position = "bottom") +
-    guides(color = guide_legend(override.aes = list(size = 2, alpha = 1)))
+    facet_wrap(~ EventType) +
+    theme(aspect.ratio = 1)
+  width <- length(unique(exprs_clean$EventType)) * 600
     
-  report$CellLabelingDebris <- list(plt = plt, width = 600, height = 600)
+  report$CellLabelingDebris <- list(plt = plt, width = width, height = 600)
 
   
   if (any(exprs$Dead)) {
