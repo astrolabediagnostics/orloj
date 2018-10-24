@@ -11,6 +11,7 @@
 #' @param channels List of channels to include in report.
 #' @param report_levels If true, intermediate level heatmaps will be exported
 #' in addition to terminal level heatmaps.
+#' @import patchwork
 #' @export
 reportCellAssignments <- function(sample,
                                   channels = NULL,
@@ -82,25 +83,80 @@ reportCellAssignments <- function(sample,
                              title = paste0(name, ": Coefficient of Variation"),
                              x_axis_order = channel_order)
 
-      # Figure: Intensity joy plot.
-      pl_exprs_long$Channel <-
-        factor(pl_exprs_long$Channel, levels = channel_order)
-      joy_plt <- list()
-      joy_plt$plt <-
-        ggplot(pl_exprs_long, aes_string(x = "Intensity", y = level_col)) +
-        ggridges::geom_density_ridges() +
-        facet_wrap(~ Channel, nrow = 1) +
-        labs(title = name, x = "Cell Subset", y = "Channel") +
-        theme(axis.text.x = element_blank(),
-              axis.ticks.x = element_blank(),
-              panel.background = element_blank())
-      joy_plt$height <- length(unique(pl_exprs_long[[level_col]])) * 20 + 20
-      joy_plt$width <- length(channels) * 75 + 20
-      level_report[[paste0(name, "_joy")]] <- joy_plt
+      # Figure: Joy plot of all channels over all subsets.
+      level_report[[paste0(name, "_joy")]] <- .plotJoy(pl_exprs_long, level_col)
     }
 
     report <- c(report, level_report)
   }
 
   report
+}
+
+.plotJoy <- function(exprs_long, level_col) {
+  # Joy plot object from expression data in long format.
+  level_order <- gtools::mixedsort(unique(exprs_long[[level_col]]))
+  channel_order <- gtools::mixedsort(as.character(unique(exprs_long$Channel)))
+
+  # Calculate xlim for each channel.
+  xlims <- exprs_long %>%
+    dplyr::group_by(Channel) %>%
+    dplyr::summarize(
+      Min = floor(min(Intensity)),
+      Max = ceiling(max(Intensity))
+    )
+
+  # Generate the figure, iterating over each (level_value, channel) combination.
+  plt <- NULL
+  for (level_value in level_order) {
+    df <- exprs_long[exprs_long[[level_col]] == level_value, ]
+  
+    for (channel in channel_order) {
+      channel_df <- df[df$Channel == channel, ]
+      xlim <- with(xlims, c(Min[Channel == channel], Max[Channel == channel]))
+
+      # Generate this panel.
+      obj <- 
+        ggplot(channel_df, aes(x = Intensity)) +
+        geom_density(fill = "grey70") +
+        coord_cartesian(xlim = xlim) +
+        theme(axis.text = element_blank(),
+              axis.ticks = element_blank(),
+              axis.title.x = element_blank(),
+              panel.background = element_blank(),
+              text = element_text(size = 12))
+    
+      # Top row: Add the channel as title.
+      if (level_value == level_order[1]) {
+        obj <- obj +
+          labs(title = channel) +
+          theme(plot.title = element_text(hjust = 0.5))
+      }
+    
+      # Lefternmost column: Add the level as Y-axis label.
+      if (channel == channel_order[1]) {
+        level_label <- gsub("_", " ", level_value)
+        level_label <- paste(strwrap(level_label, width = 10), collapse = "\n")
+        obj <- obj +
+          ylab(level_label)
+      } else {
+        obj <- obj +
+          theme(axis.title.y = element_blank())
+      }
+    
+      if (is.null(plt)) {
+        plt <- obj
+      } else {
+        plt <- plt + obj
+      }
+    }
+  }
+
+  # Layout so that each channel is stacked as one column.
+  plt <- plt + plot_layout(ncol = length(channel_order))
+
+  # 100x100 tile for each panel.
+  width <- length(channel_order) * 100
+  height <- length(level_order) * 100
+  list(plt = plt, width = width, height = height)
 }

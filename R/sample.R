@@ -137,17 +137,24 @@ fcsExprs <- function(sample,
     }
     # Update debris based on cell assignment.
     exprs$Debris[exprs$Assignment %in% astrolabeDebrisLabels()] <- TRUE
-  }
 
-  # Incorporate profiling.
-  if (!is.null(sample$subset_profiling_assignment)) {
-    profile <- sample$subset_profiling_assignment$Profile
-    profile_indices <- which(!exprs$Bead & !exprs$Dead & !exprs$Debris)
-    if (length(profile_indices) != length(profile)) {
-      stop("length of profile different than expected")
+    # Incorporate profiling.
+    if (!is.null(sample$subset_profiling_assignment)) {
+      profile <- sample$subset_profiling_assignment$Profile
+      profile_indices <- which(!exprs$Bead & !exprs$Dead & !exprs$Debris)
+      if (length(profile_indices) != length(profile)) {
+        # Reverse compatibility: Length mismatch might be due to older version of
+        # orloj treating Root_unassigned as debris.
+        exprs$Debris[exprs$Assignment == "Root_unassigned"] <- TRUE
+        profile_indices <- which(!exprs$Bead & !exprs$Dead & !exprs$Debris)
+        if (length(profile_indices) != length(profile)) {
+          # Length still different, report error.
+          stop("length of profile different than expected")
+        }
+      }
+      exprs$Profile <- exprs$Assignment
+      exprs$Profile[profile_indices] <- profile
     }
-    exprs$Profile <- exprs$Assignment
-    exprs$Profile[profile_indices] <- profile
   }
 
   # Remove any unnecessary events.
