@@ -162,11 +162,23 @@ experimentCellSubsetMap <- function(experiment,
 
   cell_subsets <-
     gtools::mixedsort(unique(stats$CellSubset[stats$Parent == level]))
-  data.frame(
+  df <- data.frame(
     Value = seq(length(cell_subsets)),
     CellSubset = cell_subsets,
     stringsAsFactors = FALSE
   )
+
+  # Add "bead", "dead", and "debris" at the end of the data frame.
+  n <- nrow(df)
+  df <-
+    rbind(
+      df,
+      data.frame(
+        Value = c(n + 1, n + 2, n + 3),
+        CellSubset = c("Bead", "Debris", "Dead"),
+        stringsAsFactors = FALSE
+      ))
+  df
 }
 
 #' Differential abundance analysis.
