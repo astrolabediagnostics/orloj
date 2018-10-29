@@ -129,6 +129,46 @@ experimentCellSubsetChannelStatistics <- function(experiment,
   stats
 }
 
+#' Map experiment cell subsets to numerical values.
+#'
+#' Create a map from experiment cell subsets in a given level to unique
+#' numerical values. This map is used when generating Assignment and Profiling
+#' columns in exported FCS files.
+#'
+#' @param experiment An Astrolabe experiment.
+#' @param level Cell subset level. Currently supported levels are "Assignment"
+#' and "Profiling". The default is "Profiling" for Profiling Only experiments
+#' and "Assignment" otherwise.
+#' @return Map from cell subsets to numerical values.
+#' @export
+experimentCellSubsetMap <- function(experiment,
+                                    level = .chooseLevel(experiment)) {
+  if (!(level %in% c("Assignment", "Profiling"))) {
+    stop("level is not \"Assignment\" or \"Profiling\"")
+  }
+  if (level == "Profiling") level = "Profile"
+
+  aggregate_statistics_filename <-
+    file.path(experiment$analysis_path, "combine_aggregate_statistics.RDS")
+  if (!file.exists(aggregate_statistics_filename)) {
+    stop(paste0(aggregate_statistics_filename, "not found"))
+  }
+  aggregate_statistics <- readRDS(aggregate_statistics_filename)
+
+  stats <- aggregate_statistics$subset_channel_statistics
+  if (!(level %in% stats$Parent)) {
+    stop("level not found in cell subset channel statistics")
+  }
+
+  cell_subsets <-
+    gtools::mixedsort(unique(stats$CellSubset[stats$Parent == level]))
+  data.frame(
+    Value = seq(length(cell_subsets)),
+    CellSubset = cell_subsets,
+    stringsAsFactors = FALSE
+  )
+}
+
 #' Differential abundance analysis.
 #'
 #' Load the experiment differential abundance analysis, for a given cell subset
