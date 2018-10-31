@@ -102,11 +102,16 @@ reportNonCells <- function(sample) {
     exprs[setdiff(seq(nrow(exprs)),
                   c(sample$debris_indices, sample$doublet_indices)), ]
   exprs_clean$EventType <- "Cell"
-  exprs_clean$EventType[exprs_clean$Assignment == "Debris"] <- "No Signal"
+  cm_neg_indices <-
+    exprs_clean$Assignment == "CM-" |
+    (grepl("CM-", exprs_clean$Assignment) &
+      grepl("_unassigned", exprs_clean$Assignment))
+  exprs_clean$EventType[cm_neg_indices] <- "Canonical Marker Negative"
   exprs_clean$EventType[exprs_clean$Assignment == "Root_unassigned"] <-
     "Unassigned"
   exprs_clean$EventType <-
-    factor(exprs_clean$EventType, levels = c("Cell", "No Signal", "Unassigned"))
+    factor(exprs_clean$EventType,
+           levels = c("Cell", "Canonical Marker Negative", "Unassigned"))
 
   # Figure: Event Length versus DNA.
   plt <- 

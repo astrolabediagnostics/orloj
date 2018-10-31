@@ -138,6 +138,11 @@ fcsExprs <- function(sample,
     # Update debris based on cell assignment.
     exprs$Debris[exprs$Assignment %in% astrolabeDebrisLabels()] <- TRUE
 
+    # Update Assignment to Bead/Debris/Dead values.
+    exprs$Assignment[exprs$Bead] <- "Bead"
+    exprs$Assignment[exprs$Debris] <- "Debris"
+    exprs$Assignment[exprs$Dead] <- "Dead"
+
     # Incorporate profiling.
     if (!is.null(sample$subset_profiling_assignment)) {
       profile <- sample$subset_profiling_assignment$Profile
