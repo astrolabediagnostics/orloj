@@ -9,6 +9,10 @@
 #' @import ggplot2
 #' @export
 reportDifferentialAbundanceAnalysis <- function(experiment) {
+  # Value for NA feature value. Samples with this value should not be included
+  # in the analysis.
+  feature_na <- "__NA__"
+
   samples <- experiment$samples
   features <- experiment$features
   sample_features <- experiment$sample_features
@@ -68,6 +72,9 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
         )
       feature_report <- list()
 
+      # Remove samples with NA values from figure data.
+      feature_data <- figure_data[figure_data[[feature_r_name]] != feature_na, ]
+
       # Get analysis results for this feature.
       feature_top_tags <- daa[[feature_r_name]]$table
       if (is.null(feature_top_tags)) {
@@ -82,10 +89,10 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
       include_line_plots <- FALSE
       if (!is.null(group_feature_label)) {
         feature_pairs <-
-          unique(figure_data[, c(feature_r_name, group_feature_label)])
+          unique(feature_data[, c(feature_r_name, group_feature_label)])
         include_line_plots <-
           nrow(feature_pairs) >
-          length(unique(figure_data[[group_feature_label]]))
+          length(unique(feature_data[[group_feature_label]]))
       }
 
       # Table: Result of differential analysis.
@@ -118,7 +125,7 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
       for (cell_subset_label in cell_subset_labels) {
         # Filter data down to this subset.
         cell_subset_data <-
-          dplyr::filter(figure_data, CellSubset == cell_subset_label)
+          dplyr::filter(feature_data, CellSubset == cell_subset_label)
 
         # Format FDR nicely for figure title.
         fdr <-

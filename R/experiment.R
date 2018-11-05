@@ -197,6 +197,10 @@ differentialAbundanceAnalysis <- function(experiment,
     stop("level is not \"Assignment\" or \"Profiling\"")
   }
 
+  # Value for NA feature value. Samples with this value should not be included
+  # in the analysis.
+  feature_na <- "__NA__"
+
   daa_filename <-
     file.path(experiment$analysis_path, "differential_abundance_analysis.RDS")
   if (!file.exists(daa_filename)) {
@@ -213,7 +217,9 @@ differentialAbundanceAnalysis <- function(experiment,
 
   # Find feature values.
   feature_values <- lapply(nameVector(names(daa)), function(feature_name) {
-    unique(experiment$sample_features[[feature_name]])
+    values <- unique(experiment$sample_features[[feature_name]])
+    values <- setdiff(values, feature_na)
+    values
   })
   # Convert feature IDs to names.
   m <-
