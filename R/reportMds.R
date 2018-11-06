@@ -39,10 +39,11 @@ reportMds <- function(experiment) {
     # Figures: Color-coding by each channel.
     for (channel in experiment$analysis_channels) {
       channel_filename <- filenameify(channel)
+      channel_bt <- addBackticks(channel)
 
       map_obj <-
         ggplot(mds, aes(x = V1, y = V2)) +
-        geom_point(aes_string(color = channel), size = 3) +
+        geom_point(aes_string(color = channel_bt), size = 3) +
         ggrepel::geom_text_repel(aes(label = CellSubset)) +
         viridis::scale_color_viridis(direction = -1) +
         labs(title = paste0("MDS map for ", level)) +
