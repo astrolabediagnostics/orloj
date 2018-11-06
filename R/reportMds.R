@@ -55,7 +55,53 @@ reportMds <- function(experiment) {
       map_plt <- list(plt = map_obj, width = 900, height = 900)
       report[[level]][[paste0("channel_", channel_filename)]] <- map_plt
     }
+
+    report[[level]]$shepard_plot <- .plotShepard(experiment, level, mds)
   }
 
   report
+}
+
+.plotShepard <- function(experiment, level, mds) {
+  # Generate a Shepard plot for a given MDS map.
+
+  # Load pairwise distances over all samples.
+  sample_rds_files <-
+    lapply(orloj::nameVector(experiment$samples$SampleId), function(sample_id) {
+      readRDS(
+        file.path(experiment$analysis_path,
+                  paste0(sample_id,
+                         ".calculate_cluster_pairwise_distances_mds.RDS")))
+    })
+
+  # Combine pairwise distances into a single data frame.
+  level_df <- lapply(experiment$samples$SampleId, function(sample_id) {
+    sample_rds_files[[sample_id]][[level]]
+  }) %>% dplyr::bind_rows()
+  # Calculate pairwise distances in MDS map.
+  mtx <- as.matrix(mds[, c("V1", "V2")])
+  rownames(mtx) <- mds$CellSubset
+  dist_mtx <- as.matrix(dist(mtx))
+  # Convert to data frame.
+  dist_df <- dist_mtx %>%
+    as.data.frame(.) %>%
+    tibble::rownames_to_column("From") %>%
+    reshape2::melt(id.vars = "From",
+                   variable.name = "To",
+                   value.name = "MDSDist")
+  # Combine with distances above.
+  dist_df <- dplyr::left_join(level_df, dist_df, by = c("From", "To"))
+  dist_df <- dplyr::filter(dist_df, !is.na(Dist), Dist > 0)
+
+  pearson_rho <- round(with(dist_df, cor(Dist, MDSDist)), 2)
+
+  plt_title <- paste0("MDS Map Shepard Plot (Pearson rho = ", pearson_rho, ")")
+  plt <- orloj::plotScatterPlot(dist_df, x = "Dist", y = "MDSDist", alpha = 0.1)
+  plt$plt <-
+    plt$plt +
+    labs(title = plt_title,
+         x = "Original Sample Distance", y = "MDS Map Distance") +
+    theme(aspect.ratio = 1)
+
+  plt
 }
