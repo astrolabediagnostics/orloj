@@ -6,7 +6,7 @@
 #' plot of analysis results.
 #'
 #' @param experiment An Astrolabe experiment.
-#' @import ggplot2
+#' @import ggplot2 ggrepel
 #' @export
 reportDifferentialAbundanceAnalysis <- function(experiment) {
   # Value for NA feature value. Samples with this value should not be included

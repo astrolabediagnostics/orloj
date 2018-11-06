@@ -17,5 +17,5 @@ and "Assignment" otherwise.}
 Cell subset counts for that level.
 }
 \description{
-Cell subset counts for all of the samples in an experiment.
+Cell subset counts and frequencies for all of the samples in an experiment.
 }

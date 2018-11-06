@@ -57,7 +57,7 @@ experimentSummary <- function(experiment) {
 
 #' Experiment cell subset counts.
 #'
-#' Cell subset counts for all of the samples in an experiment.
+#' Cell subset counts and frequencies for all of the samples in an experiment.
 #'
 #' @param experiment An Astrolabe experiment.
 #' @param level Cell subset level. Currently supported levels are "Assignment"
@@ -88,6 +88,12 @@ experimentCellSubsetCounts <- function(experiment,
     dplyr::filter(Parent == level) %>%
     dplyr::select(-Parent)
   counts <- dplyr::left_join(experiment$samples, counts, by = "SampleId")
+
+  # Calculate frequencies.
+  counts <- counts %>%
+    dplyr::group_by(SampleId) %>%
+    dplyr::mutate(Freq = N / sum(N)) %>%
+    dplyr::ungroup()
 
   counts
 }
@@ -189,10 +195,12 @@ experimentCellSubsetMap <- function(experiment,
 #' @param experiment An Astrolabe experiment.
 #' @param level Cell subset level. Currently supported levels are "Assignment"
 #' and "Profiling".
+#' @param convert_ids Whether to convert Astrolabe IDs to feature names.
 #' @return Differential abundance analysis list.
 #' @export
 differentialAbundanceAnalysis <- function(experiment,
-                                          level = .chooseLevel(experiment)) {
+                                          level = .chooseLevel(experiment),
+                                          convert_ids = TRUE) {
   if (!(level %in% c("Assignment", "Profiling"))) {
     stop("level is not \"Assignment\" or \"Profiling\"")
   }
@@ -222,28 +230,96 @@ differentialAbundanceAnalysis <- function(experiment,
     values
   })
   # Convert feature IDs to names.
-  m <-
-    match(as.numeric(gsub("^feature_", "", names(daa))),
-          experiment$features$FeatureId)
-  names(daa) <- experiment$features$FeatureName[m]
-  names(feature_values) <- experiment$features$FeatureName[m]
+  if (convert_ids) {
+    m <-
+      match(as.numeric(gsub("^feature_", "", names(daa))),
+            experiment$features$FeatureId)
+    names(daa) <- experiment$features$FeatureName[m]
+    names(feature_values) <- experiment$features$FeatureName[m]
+  }
 
-  # Convert tables to tibbles and only keep p-value and FDR columns, and logFC for
-  # features with two values.
+  # Convert tables to tibbles and only keep p-value, FDR, and logFC.
   lapply(nameVector(names(daa)), function(feature_name) {
     if (is.null(daa[[feature_name]])) {
       NULL
     } else {
       tab <- as.data.frame(daa[[feature_name]]) %>%
         tibble::rownames_to_column("CellSubset")
-      if ("logFC" %in% colnames(tab)) {
-        cols <- c("CellSubset", "logFC", "PValue", "FDR")
-      } else {
-        cols <- c("CellSubset", "PValue", "FDR")
+
+      # Calculate max(logFC) for features with multiple values.
+      log_fc_cols <- grep("logFC", colnames(tab))
+      if (length(log_fc_cols) > 1) {
+        log_fc <- tab[, log_fc_cols]
+        max_log_fc <- apply(log_fc, 1, function(v) v[which.max(abs(v))])
+        tab$logFC <- max_log_fc
       }
-      cols <- c(cols, paste0("median_", feature_values[[feature_name]]))
+
+      cols <-
+        c("CellSubset",
+          "logFC",
+          "PValue",
+          "FDR",
+          paste0("median_", feature_values[[feature_name]]))
       
       tab[, cols]
     }
   })
+}
+
+#' MDS map.
+#'
+#' Return the MDS map for the experiment, for a given level.
+#'
+#' @param experiment An Astrolabe experiment.
+#' @param level Cell subset level. Currently supported levels are "Assignment"
+#' and "Profiling".
+#' @param convert_ids Whether to convert Astrolabe IDs to feature names.
+#' @return MDS map.
+#' @export
+experimentMds <- function(experiment,
+                          level = .chooseLevel(experiment),
+                          convert_ids = TRUE) {
+  if (!(level %in% c("Assignment", "Profiling"))) {
+    stop("level is not \"Assignment\" or \"Profiling\"")
+  }
+
+  mds_filename <-
+    file.path(experiment$analysis_path, "calculate_mds.RDS")
+  if (!file.exists(mds_filename)) {
+    stop(paste0(mds_filename, " not found"))
+  }
+  mds <- readRDS(mds_filename)
+
+  mds <- mds[[level]]
+
+  # Calculate and add mean frequency over all samples.
+  cell_subset_counts <- experimentCellSubsetCounts(experiment, level = level)
+  mds_freqs <- cell_subset_counts %>%
+    dplyr::group_by(CellSubset) %>%
+    dplyr::summarize(Freq = mean(Freq))
+  mds <- dplyr::left_join(mds, mds_freqs, by = "CellSubset")
+
+  # Calculate and add mean marker intensities over all samples.
+  marker_stats <-
+    experimentCellSubsetChannelStatistics(experiment, level = level)
+  marker_stats <- marker_stats %>%
+    dplyr::group_by(CellSubset, ChannelName) %>%
+    dplyr::summarize(Median = mean(Median)) %>%
+    reshape2::dcast(CellSubset ~ ChannelName, value.var = "Median")
+  mds <- dplyr::left_join(mds, marker_stats, by = "CellSubset")
+
+  # Add max(fold change) and -log10(FDR) for each feature.
+  daa <-
+    orloj::differentialAbundanceAnalysis(experiment, level = level, convert_ids)
+  for (feature_name in names(daa)) {
+    tab <- daa[[feature_name]]
+    tab <- tab[, c("CellSubset", "logFC", "FDR")]
+    colnames(tab) <-
+      c("CellSubset",
+        paste0(feature_name, "_logFC"),
+        paste0(feature_name, "_FDR"))
+    mds <- dplyr::left_join(mds, tab, by = "CellSubset")
+  }
+
+  mds
 }
