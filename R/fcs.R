@@ -90,6 +90,7 @@ isSample <- function(sample) {
   desc[grep("CD56.*CD56", desc)] <- "CD56"
   desc[grep("CD45RA.*CD45RA", desc)] <- "CD45RA"
   desc[grep("CD45RA.*Fluidigm", desc)] <- "CD45RA"
+  desc[desc == "140Ce_gdTCR"] <- "gdTCR"
   desc
 }
 
