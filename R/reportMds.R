@@ -24,11 +24,11 @@ reportMds <- function(experiment) {
       ggplot(mds, aes(x = V1, y = V2)) +
       geom_point(size = 3) +
       ggrepel::geom_text_repel(aes(label = CellSubset)) +
-      labs(title = paste0("MDS map for ", level)) +
+      labs(title = paste0("MDS map for ", level),
+           x = "MDS Map 1", y = "MDS Map 2") +
       theme(aspect.ratio = 1,
             axis.text = element_blank(),
             axis.ticks = element_blank(),
-            axis.title = element_blank(),
             panel.background = element_blank())
     map_plt <- list(plt = map_obj, width = 900, height = 900, data = mds)
     report[[level]]$mds_map <- map_plt
@@ -46,11 +46,11 @@ reportMds <- function(experiment) {
         geom_point(aes_string(color = channel_bt), size = 3) +
         ggrepel::geom_text_repel(aes(label = CellSubset)) +
         viridis::scale_color_viridis(direction = -1) +
-        labs(title = paste0("MDS map for ", level)) +
+        labs(title = paste0("MDS map for ", level),
+             x = "MDS Map 1", y = "MDS Map 2") +
         theme(aspect.ratio = 1,
               axis.text = element_blank(),
               axis.ticks = element_blank(),
-              axis.title = element_blank(),
               legend.position = "bottom",
               panel.background = element_blank())
       map_plt <- list(plt = map_obj, width = 900, height = 900)
