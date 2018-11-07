@@ -219,7 +219,7 @@ differentialAbundanceAnalysis <- function(experiment,
   daa <- differential_abundance_analysis$differential_abundance_analysis
 
   if (!(level %in% names(daa))) {
-    stop("required level not found in differential abundance analysis")
+    return(NULL)
   }
   daa <- daa[[level]]
 
@@ -309,8 +309,7 @@ experimentMds <- function(experiment,
   mds <- dplyr::left_join(mds, marker_stats, by = "CellSubset")
 
   # Add max(fold change) and -log10(FDR) for each feature.
-  daa <-
-    orloj::differentialAbundanceAnalysis(experiment, level = level, convert_ids)
+  daa <- differentialAbundanceAnalysis(experiment, level = level, convert_ids)
   for (feature_name in names(daa)) {
     tab <- daa[[feature_name]]
     tab <- tab[, c("CellSubset", "logFC", "FDR")]
