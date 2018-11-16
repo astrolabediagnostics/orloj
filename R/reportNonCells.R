@@ -133,20 +133,25 @@ reportNonCells <- function(sample) {
     exprs$EventType <- factor(exprs$EventType, levels = c("Alive", "Dead"))
   
     # Figure: DNA versus cisplatin.
+    livedead_idx <- standard_channels$livedead_idx
+    livedead_lim <- c(0, ceiling(max(exprs[[livedead_idx]])))
     n_alive <- sum(!exprs$Dead)
     per_alive <- mean(!exprs$Dead)
-    exprs$DNA <- exprs[[sample$dna_col_idx]]
-    exprs$LiveDeadStaining <- exprs[[sample$livedead_col]]
+    df <- data.frame(
+      EventType = exprs$EventType,
+      DNA = exprs[[dna191_idx]],
+      LiveDead = exprs[[livedead_idx]]
+    )
     plt <-
-      ggplot(mapping = aes(x = DNA, y = LiveDeadStaining)) +
-      geom_point(data = exprs, alpha = 0.1, color = "grey70", size = 0) +
-      geom_point(data = exprs[sample$live_indices, ],
+      ggplot(mapping = aes(x = DNA, y = LiveDead)) +
+      geom_point(data = df, alpha = 0.1, color = "grey70", size = 0) +
+      geom_point(data = df[df$EventType == "Alive", ],
                  alpha = 0.5, color = "#1C3C44", size = 1) +
-      geom_density2d(data = exprs, color = "grey20") +
+      geom_density2d(data = df, color = "grey20") +
       labs(title =
              paste0(prettyNum(n_alive, big.mark = ","), " (",
                     round(per_alive * 100, 1), "%) live events"),
-           y = "Live/Dead Staining (Pt195)") +
+           y = "Live/Dead") +
       theme(aspect.ratio = 1)
     report$LiveDead <- list(plt = plt, width = 600, height = 600)
   }

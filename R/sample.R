@@ -119,8 +119,15 @@ fcsExprs <- function(sample,
 
   # Mark dead.
   if (!is.null(sample$live_indices)) {
+    # Filter live_indices through beads and debris/doublets first.
+    live_indices <- seq(nrow(exprs))
+    live_indices <- live_indices[sample$non_bead_indices]
+    live_indices <-
+      live_indices[-c(sample$debris_indices, sample$doublet_indices)]
+    live_indices <- live_indices[sample$live_indices]
     exprs$Dead <- TRUE
-    exprs$Dead[sample$live_indices] <- FALSE
+    exprs$Dead[exprs$Bead | exprs$Debris] <- FALSE
+    exprs$Dead[live_indices] <- FALSE
   }
 
   # Incorporate cell assignments.

@@ -14,5 +14,5 @@ A list with indices for each of the standard channels.
 }
 \description{
 Find the indices of a set of standard mass cytometry channels, including
-Time, Event Length, and Ir191/193 (DNA).
+Time, Event Length, Ir191/193 (DNA), and Live/Dead.
 }
