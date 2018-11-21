@@ -80,8 +80,10 @@ isSample <- function(sample) {
 }
 
 .removeCiteSeqFromDesc <- function(desc) {
-  # Temporary code. Remove the " (v)" suffix from channel descriptions.
+  # Temporary code. Remove the " (v)" suffix and the adt_ prefix from channel
+  # descriptions.
   gsub(" \\(v\\)$", "", desc)
+  gsub("^adt_", "", desc)
 }
 
 .removeSpecialCasesFromDesc <- function(desc) {
@@ -90,6 +92,7 @@ isSample <- function(sample) {
   desc[grep("CD56.*CD56", desc)] <- "CD56"
   desc[grep("CD45RA.*CD45RA", desc)] <- "CD45RA"
   desc[grep("CD45RA.*Fluidigm", desc)] <- "CD45RA"
+  desc[grep("TCR_gamma_delta", desc)] <- "gdTCR"
   desc[desc == "140Ce_gdTCR"] <- "gdTCR"
   desc
 }
@@ -174,6 +177,11 @@ calculateFcsDigest <- function(sample, parameter_name = NULL) {
     # Temporary code. Heuristic: Look for the suffixes that are added to citeseq
     # FCS files. Down the line, we should let the user upload CSV files, and
     # include some sort of CITEseq flag.
+    return("citeseq")
+  }
+
+  if (sum(grep("adt_", desc)) > 5) {
+    # Temporary code. Another CiteSEQ heuristic.
     return("citeseq")
   }
 
