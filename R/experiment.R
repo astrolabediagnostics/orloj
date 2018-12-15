@@ -311,6 +311,9 @@ experimentMds <- function(experiment,
   # Add max(fold change) and -log10(FDR) for each feature.
   daa <- differentialAbundanceAnalysis(experiment, level = level, convert_ids)
   for (feature_name in names(daa)) {
+    # Skip features for which we did not run DAA.
+    if (is.null(daa[[feature_name]])) next
+
     tab <- daa[[feature_name]]
     tab <- tab[, c("CellSubset", "logFC", "FDR")]
     colnames(tab) <-
