@@ -95,6 +95,10 @@ isSample <- function(sample) {
   desc[grep("TCR_gamma_delta", desc)] <- "gdTCR"
   desc[desc == "FceR1a"] <- "FceRIa"
   desc[desc == "140Ce_gdTCR"] <- "gdTCR"
+
+  # __v_ suffix seems to be popular with some researchers.
+  desc <- gsub("__v_$", "", desc)
+
   desc
 }
 
