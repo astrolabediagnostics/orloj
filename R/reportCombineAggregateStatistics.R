@@ -117,13 +117,19 @@ getCellCounts <- function(aggregate_statistics, analysis) {
   if (analysis == "Profiling") analysis <- "Profile"
 
   # Organize sample features: Map feature IDs to names and add sample names.
-  features <- experiment$features
-  features$FeatureId <- paste0("feature_", features$FeatureId)
-  sample_features <- experiment$sample_features
-  m <- match(features$FeatureId, colnames(sample_features))
-  colnames(sample_features)[m] <- features$FeatureName
-  sample_features <-
-    dplyr::left_join(sample_features, experiment$samples, by = "SampleId")
+  if (nrow(features) == 0) {
+    sample_features <- experiment$samples
+    feature_names <- c()
+  } else {
+    sample_features <- experiment$sample_features
+    features <- experiment$features
+    feature_names <- features$FeatureName
+    features$FeatureId <- paste0("feature_", features$FeatureId)
+    m <- match(features$FeatureId, colnames(sample_features))
+    colnames(sample_features)[m] <- feature_names
+    sample_features <-
+      dplyr::left_join(sample_features, experiment$samples, by = "SampleId")
+  }
 
   # Reshape channel aggregate statistics into wide (one for median, one for CV).
   scs <- aggregate_statistics$subset_channel_statistics
@@ -141,7 +147,7 @@ getCellCounts <- function(aggregate_statistics, analysis) {
   # Combine each data frame with sample features and reorganize column order.
   scs_median <- dplyr::left_join(scs_median, sample_features, by = "SampleId")
   scs_cv <- dplyr::left_join(scs_cv, sample_features, by = "SampleId")
-  cols <- c("SampleId", "Name", "Filename", features$FeatureName)
+  cols <- c("SampleId", "Name", "Filename", feature_names)
   cols <- c(cols, setdiff(colnames(scs_median), cols))
   scs_median <- scs_median[, cols]
   scs_cv <- scs_cv[, cols]
