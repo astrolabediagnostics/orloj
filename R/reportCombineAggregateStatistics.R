@@ -117,12 +117,12 @@ getCellCounts <- function(aggregate_statistics, analysis) {
   if (analysis == "Profiling") analysis <- "Profile"
 
   # Organize sample features: Map feature IDs to names and add sample names.
+  features <- experiment$features
   if (nrow(features) == 0) {
     sample_features <- experiment$samples
     feature_names <- c()
   } else {
     sample_features <- experiment$sample_features
-    features <- experiment$features
     feature_names <- features$FeatureName
     features$FeatureId <- paste0("feature_", features$FeatureId)
     m <- match(features$FeatureId, colnames(sample_features))
