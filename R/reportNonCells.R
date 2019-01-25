@@ -68,6 +68,8 @@ reportNonCells <- function(sample) {
   standard_channels <- findStandardMassCytometryChannels(sample)
   event_length_idx <- standard_channels$event_length_idx
   dna191_idx <- standard_channels$dna191_idx
+  # Don't return a report if DNA or event length are missing.
+  if (is.null(dna191_idx) || is.null(event_length_idx)) return(c())
   colnames(exprs)[event_length_idx] <- "Event Length"
   colnames(exprs)[dna191_idx] <- "DNA"
 
