@@ -143,7 +143,14 @@ fcsExprs <- function(sample,
       exprs[ca_indices, col_name] <- cell_assignments[[col_name]]
     }
     # Update debris based on cell assignment.
-    exprs$Debris[exprs$Assignment %in% astrolabeDebrisLabels()] <- TRUE
+    debris_labels <- astrolabeDebrisLabels()
+    if (!is.null(sample$cm_is_debris)) {
+      if (sample$cm_is_debris) {
+        # Set CM to debris if required by experiment.
+        debris_labels <- c(debris_labels, "CM-", "CM-_unassigned")
+      }
+    }
+    exprs$Debris[exprs$Assignment %in% debris_labels] <- TRUE
 
     # Update Assignment to Bead/Debris/Dead values.
     exprs$Assignment[exprs$Bead] <- "Bead"
@@ -155,8 +162,8 @@ fcsExprs <- function(sample,
       profile <- sample$subset_profiling_assignment$Profile
       profile_indices <- which(!exprs$Bead & !exprs$Dead & !exprs$Debris)
       if (length(profile_indices) != length(profile)) {
-        # Reverse compatibility: Length mismatch might be due to older version of
-        # orloj treating Root_unassigned as debris.
+        # Reverse compatibility: Length mismatch might be due to older version
+        # of orloj treating Root_unassigned as debris.
         exprs$Debris[exprs$Assignment == "Root_unassigned"] <- TRUE
         profile_indices <- which(!exprs$Bead & !exprs$Dead & !exprs$Debris)
         if (length(profile_indices) != length(profile)) {
@@ -166,16 +173,6 @@ fcsExprs <- function(sample,
       }
       exprs$Profile <- exprs$Assignment
       exprs$Profile[profile_indices] <- profile
-    }
-  }
-
-  # Check for instructions that set CM to debris.
-  if (!is.null(sample$cm_is_debris)) {
-    if (sample$cm_is_debris) {
-      if (!is.null(sample$cell_assignments)) {
-        cm_mask <- exprs$Assignment %in% c("CM-", "CM-_unassigned")
-        exprs$Debris <- exprs$Debris | cm_mask
-      }
     }
   }
 
