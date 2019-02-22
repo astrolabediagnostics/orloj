@@ -172,8 +172,10 @@ fcsExprs <- function(sample,
   # Check for instructions that set CM to debris.
   if (!is.null(sample$cm_is_debris)) {
     if (sample$cm_is_debris) {
-      cm_mask <- exprs$Assignment %in% c("CM-", "CM-_unassigned")
-      exprs$Debris <- exprs$Debris | cm_mask
+      if (!is.null(sample$cell_assignments)) {
+        cm_mask <- exprs$Assignment %in% c("CM-", "CM-_unassigned")
+        exprs$Debris <- exprs$Debris | cm_mask
+      }
     }
   }
 
