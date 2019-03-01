@@ -84,7 +84,10 @@ reportCellAssignments <- function(sample,
                              x_axis_order = channel_order)
 
       # Figure: Joy plot of all channels over all subsets.
-      level_report[[paste0(name, "_joy")]] <- .plotJoy(pl_exprs_long, level_col)
+      if (level_col == "Assignment") {
+        level_report[[paste0(name, "_joy")]] <-
+          .plotJoy(pl_exprs_long, level_col)
+      }
     }
 
     report <- c(report, level_report)
