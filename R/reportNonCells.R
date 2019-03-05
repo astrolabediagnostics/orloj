@@ -1,8 +1,6 @@
 #' Non-cells report.
 #'
-#' For Aurora, generates plots that report on events with extreme FSC-A values,
-# high FSC-W values, or high LD values.
-#' For mass cytometry, generate plot for debris and live/dead.
+#' Generate plots for debris, doublets, and live/dead events.
 #'
 #' @param sample An Astrolabe sample.
 #' @return An orloj report list with all of the required objects.
@@ -10,58 +8,6 @@
 reportNonCells <- function(sample) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
-  if (sample$instrument == "aurora") {
-    .reportNonCellsAurora(sample)
-  } else if(sample$instrument == "mass_cytometry") {
-    .reportNonCellsMassCytometry(sample)
-  } else {
-    NULL
-  }
-}
-
-.reportNonCellsAurora <- function(sample) {
-  if (nrow(sample$exprs) == length(sample$non_cell_indices)) {
-    # No non-cell indices found, nothing to report.
-    return(NULL)
-  }
-
-  stop("This code does not use the new fcsExprs structure")
-
-  exprs <- orloj::fcsExprs(sample, keep_debris = TRUE)
-
-  if (!all(c("FSC_A", "FSC_W", "LD") %in% colnames(exprs))) {
-    # One or more Aurora columns missing, nothing to report.
-    return(NULL)
-  }
-
-  report <- list()
-
-  # Get FSC-A, FSC-W, and LD, and set the various non-cell events.
-  exprs <- exprs[, c("FSC_A", "FSC_W", "LD")]
-  exprs$EventType <- c("Cell")
-  exprs$EventType[sample$extreme_fsc_a_indices] <- "FSC-A High/Low"
-  exprs$EventType[sample$high_fsc_w_indices] <- "FSC-W High (Doublet)"
-
-  # Figure: FSC-A versus FSC-W.
-  report$FSC_A_vs_FSC_W <-
-    orloj::plotScatterPlot(exprs, "FSC_A", "FSC_W", "EventType",
-                           size = 0, alpha = 0.1)
-  # Table: Event type counts (after adding LD high).
-  exprs$EventType[sample$high_ld_indices] <- "LD High (Dead)"
-  counts <- exprs %>%
-    dplyr::count(EventType) %>%
-    dplyr::mutate(Per = n / sum(n))
-  report$Counts <- list(data = counts)
-  # Figure: FSC-A versus LD.
-  exprs <- dplyr::filter(exprs, EventType %in% c("Cell", "LD High (Dead)"))
-  report$FSC_A_vs_LD <- 
-    orloj::plotScatterPlot(exprs, "FSC_A", "LD", "EventType",
-                           size = 0, alpha = 0.1)
-
-  report
-}
-
-.reportNonCellsMassCytometry <- function(sample) {
   exprs <- fcsExprs(sample, keep_debris = TRUE, keep_dead = TRUE)
 
   # Set standard naming for Event Length and DNA columns.
@@ -126,7 +72,6 @@ reportNonCells <- function(sample) {
   width <- length(unique(exprs_clean$EventType)) * 600
     
   report$CellLabelingDebris <- list(plt = plt, width = width, height = 600)
-
   
   if (any(exprs$Dead)) {
     # Generate live/dead report.

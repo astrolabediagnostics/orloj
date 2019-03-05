@@ -4,7 +4,8 @@
 \alias{plotBoxPlot}
 \title{Box plot object.}
 \usage{
-plotBoxPlot(data, x, y, title = NULL, scale_y_labels = NULL, theme = NULL)
+plotBoxPlot(data, x, y, title = NULL, scale_y_labels = NULL,
+  theme = NULL)
 }
 \arguments{
 \item{data}{Dataset to use for the plot. If sample, exprs will be used.}

@@ -4,14 +4,12 @@
 \alias{convertFlowFrame}
 \title{Convert a FlowCore flow_frame to Astrolabe sample.}
 \usage{
-convertFlowFrame(filename, flow_frame, instrument)
+convertFlowFrame(filename, flow_frame)
 }
 \arguments{
 \item{filename}{The name of the FCS file to import.}
 
 \item{flow_frame}{FlowCore flow frame.}
-
-\item{instrument}{The identified instrument for this sample.}
 }
 \value{
 FCS data, in orloj internal FCS list format.

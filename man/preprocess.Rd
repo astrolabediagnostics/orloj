@@ -4,9 +4,11 @@
 \alias{preprocess}
 \title{Preprocess an Astrolabe sample.}
 \usage{
-preprocess(sample)
+preprocess(experiment, sample)
 }
 \arguments{
+\item{experiment}{An Astrolabe experiment.}
+
 \item{sample}{An Astrolabe sample.}
 }
 \value{

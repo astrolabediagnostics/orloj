@@ -55,11 +55,6 @@ loadSample <- function(experiment, sample_id = NULL, sample_name = NULL) {
     }
   }
 
-  # Reverse compatibility: instrument was originally source.
-  if (is.null(sample$instrument)) {
-    sample$instrument <- sample$source
-  }
-
   sample
 }
 

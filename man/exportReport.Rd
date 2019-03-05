@@ -4,7 +4,8 @@
 \alias{exportReport}
 \title{Export an orloj report.}
 \usage{
-exportReport(dir, report, file_format = "png", dpi = 100, verbose = FALSE)
+exportReport(dir, report, file_format = "png", dpi = 100,
+  verbose = FALSE)
 }
 \arguments{
 \item{dir}{The name of the dir where figures are to be exported.}

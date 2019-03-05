@@ -19,8 +19,7 @@ astrolabeDebrisLabels <- function() c("Debris")
 #' @return TRUE if the object is an Astrolabe sample, FALSE otherwise.
 #' @export
 isSample <- function(sample) {
-  default_fields <-
-    c("exprs", "parameter_name", "parameter_desc", "instrument")
+  default_fields <- c("exprs", "parameter_name", "parameter_desc")
 
   if (!is.list(sample)) {
     FALSE
@@ -79,13 +78,6 @@ isSample <- function(sample) {
   unlist(lapply(desc, function(s) gsub("_EQ", "", s)))
 }
 
-.removeCiteSeqFromDesc <- function(desc) {
-  # Temporary code. Remove the " (v)" suffix and the adt_ prefix from channel
-  # descriptions.
-  gsub(" \\(v\\)$", "", desc)
-  gsub("^adt_", "", desc)
-}
-
 .removeSpecialCasesFromDesc <- function(desc) {
   # Remove special cases which were encountered during our work with various
   # data sets.
@@ -97,8 +89,8 @@ isSample <- function(sample) {
   desc[desc == "FceR1a"] <- "FceRIa"
   desc[desc == "140Ce_gdTCR"] <- "gdTCR"
 
-  # __v_ suffix seems to be popular with some researchers.
-  desc <- gsub("__v_$", "", desc)
+  # Remove the __v_ suffix from Cytobank viSNE analysis.
+  desc <- gsub(" \\(v\\)$", "", desc)
 
   desc
 }
@@ -132,8 +124,6 @@ importFcsChannels <- function(filename) {
   channels$Desc <- .removeMassFromDesc(channels$Desc)
   channels$Desc <- .removeEqFromDesc(channels$Desc)
   channels$Desc <- .removeSpecialCasesFromDesc(channels$Desc)
-  # Temporary code. Remove the " (v)" suffix for CITEseq FCS files.
-  channels$Desc <- .removeCiteSeqFromDesc(channels$Desc)
   # NA/empty descriptions should copy from name.
   channels$Desc[is.na(channels$Desc) | channels$Desc == ""] <-
     channels$Name[is.na(channels$Desc) | channels$Desc == ""]
@@ -179,18 +169,6 @@ calculateFcsDigest <- function(sample, parameter_name = NULL) {
     return("mass_cytometry")
   }
 
-  if (sum(grepl("_g$", desc)) > 5 & sum(grepl(" \\(v\\)$", desc)) > 5) {
-    # Temporary code. Heuristic: Look for the suffixes that are added to citeseq
-    # FCS files. Down the line, we should let the user upload CSV files, and
-    # include some sort of CITEseq flag.
-    return("citeseq")
-  }
-
-  if (sum(grep("adt_", desc)) > 5) {
-    # Temporary code. Another CiteSEQ heuristic.
-    return("citeseq")
-  }
-
   return("unknown")
 }
 
@@ -231,11 +209,10 @@ identifyFcsInstrument <- function(flow_frame) {
 #'
 #' @param filename The name of the FCS file to import.
 #' @param flow_frame FlowCore flow frame.
-#' @param instrument The identified instrument for this sample.
 #' @seealso \code{\link{isSample}}, \code{\link{fcsExprs}}
 #' @return FCS data, in orloj internal FCS list format.
 #' @export
-convertFlowFrame <- function(filename, flow_frame, instrument) {
+convertFlowFrame <- function(filename, flow_frame) {
   # Import flow data and channels information.
   channels <- importFcsChannels(filename)
 
@@ -262,23 +239,23 @@ convertFlowFrame <- function(filename, flow_frame, instrument) {
     exprs = exprs,
     parameter_name = name,
     parameter_desc = desc,
-    instrument = instrument
   )
 }
 
 #' Preprocess an Astrolabe sample.
 #'
+#' @param experiment An Astrolabe experiment.
 #' @param sample An Astrolabe sample.
 #' @return Sample after the above steps are done.
 #' @export
-preprocess <- function(sample) {
+preprocess <- function(experiment, sample) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
-  if (sample$instrument == "mass_cytometry") {
+  if (experiment$instrument == "mass_cytometry") {
     massPreprocess(sample)
-  } else if (sample$instrument == "aurora") {
+  } else if (experiment$instrument == "aurora") {
     auroraPreprocess(sample)
-  } else if (sample$instrument == "citeseq") {
+  } else if (experiment$instrument == "citeseq") {
     citeseqPreprocess(sample)
   } else {
     stop("unknown sample instrument")
