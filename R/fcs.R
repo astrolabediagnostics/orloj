@@ -238,7 +238,7 @@ convertFlowFrame <- function(filename, flow_frame) {
   list(
     exprs = exprs,
     parameter_name = name,
-    parameter_desc = desc,
+    parameter_desc = desc
   )
 }
 
