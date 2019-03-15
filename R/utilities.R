@@ -97,10 +97,11 @@ findStandardMassCytometryChannels <- function(sample) {
       grep("length", sample$parameter_name, ignore.case = TRUE)
     )
   if (length(event_length_idx) == 0) {
-    intersect(
-      grep("cell", sample$parameter_name, ignore.case = TRUE),
-      grep("length", sample$parameter_name, ignore.case = TRUE)
-    )
+    event_length_idx <-
+      intersect(
+        grep("cell", sample$parameter_name, ignore.case = TRUE),
+        grep("length", sample$parameter_name, ignore.case = TRUE)
+      )
   }
 
   dna191_idx <- which(sample$parameter_name == "Ir191Di")
