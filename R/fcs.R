@@ -33,17 +33,17 @@ isSample <- function(sample) {
   # description field of an FCS file (and include additional values) we will
   # remove them.
   c(
-    "89Y",   "Y89",   "113In", "In113", "115In", "In115", "141Pr", "Pr141",
-    "142Nd", "Nd142", "143Nd", "Nd143", "144Nd", "Nd144", "145Nd", "Nd145",
-    "146Nd", "Nd146", "147Sm", "Sm147", "148Nd", "Nd148", "148Sm", "Sm148",
-    "149Sm", "Sm149", "150Nd", "Nd150", "151Eu", "Eu151", "152Sm", "Sm152",
-    "153Eu", "Eu153", "154Sm", "Sm154", "155Gd", "Gd155", "156Gd", "Gd156",
-    "157Gd", "Gd157", "158Gd", "Gd158", "159Tb", "Tb159", "160Gd", "Gd160",
-    "161Dy", "Dy161", "162Dy", "Dy162", "163Dy", "Dy163", "164Dy", "Dy164",
-    "165Ho", "Ho165", "166Er", "Er166", "167Er", "Er167", "168Er", "Er168",
-    "169Tm", "Tm169", "170Er", "Er170", "171Yb", "Yb171", "172Yb", "Yb172",
-    "173Yb", "Yb173", "174Yb", "Yb174", "175Lu", "Lu175", "176Yb", "Yb176",
-    "209Bi", "Bi209"
+    "89Y",   "Y89",   "113In", "In113", "115In", "In115", "140Ce", "Ce140",
+    "141Pr", "Pr141", "142Nd", "Nd142", "143Nd", "Nd143", "144Nd", "Nd144",
+    "145Nd", "Nd145", "146Nd", "Nd146", "147Sm", "Sm147", "148Nd", "Nd148",
+    "148Sm", "Sm148", "149Sm", "Sm149", "150Nd", "Nd150", "151Eu", "Eu151",
+    "152Sm", "Sm152", "153Eu", "Eu153", "154Sm", "Sm154", "155Gd", "Gd155",
+    "156Gd", "Gd156", "157Gd", "Gd157", "158Gd", "Gd158", "159Tb", "Tb159",
+    "160Dy", "Dy160", "160Gd", "Gd160", "161Dy", "Dy161", "162Dy", "Dy162",
+    "163Dy", "Dy163", "164Dy", "Dy164", "165Ho", "Ho165", "166Er", "Er166",
+    "167Er", "Er167", "168Er", "Er168", "169Tm", "Tm169", "170Er", "Er170",
+    "171Yb", "Yb171", "172Yb", "Yb172", "173Yb", "Yb173", "174Yb", "Yb174",
+    "175Lu", "Lu175", "176Lu", "Lu176", "176Yb", "Yb176", "209Bi", "Bi209"
   )
 }
 
@@ -87,7 +87,7 @@ isSample <- function(sample) {
   desc[grep("TCR_gamma_delta", desc)] <- "gdTCR"
   desc[grep("NKp46__CD335", desc)] <- "NKp46"
   desc[desc == "FceR1a"] <- "FceRIa"
-  desc[desc == "140Ce_gdTCR"] <- "gdTCR"
+  desc[desc == "Singlec-8"] <- "Siglec8"
 
   # Remove the __v_ suffix from Cytobank viSNE analysis.
   desc <- gsub(" \\(v\\)$", "", desc)
