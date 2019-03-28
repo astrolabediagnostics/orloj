@@ -327,14 +327,14 @@ experimentMds <- function(experiment,
 }
 
 
-#' Experiment labeling hierarchy.
+#' Experiment Assignment labeling strategy.
 #'
-#' Return a user-readable table of the experiment labeling hierarchy, listing
-#' the strategy for all terminal Assignment nodes.
+#' Return a user-readable table of the labeling strategy for the Assignment
+#' level.
 #' @param experiment An Astrolabe experiment.
 #' @return User-readable table of the experiment hierarchy.
 #' @export
-experimentLabelingHierarchy <- function(experiment) {
+experimentLabelingStrategy <- function(experiment) {
   hierarchy <-
     readRDS(file.path(experiment$analysis_path, "hierarchy.RDS"))$hierarchy
 
