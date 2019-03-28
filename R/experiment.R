@@ -325,3 +325,83 @@ experimentMds <- function(experiment,
 
   mds
 }
+
+
+#' Experiment labeling hierarchy.
+#'
+#' Return a user-readable table of the experiment labeling hierarchy, listing
+#' the strategy for all terminal Assignment nodes.
+#' @param experiment An Astrolabe experiment.
+#' @return User-readable table of the experiment hierarchy.
+#' @export
+experimentLabelingHierarchy <- function(experiment) {
+  hierarchy <-
+    readRDS(file.path(experiment$analysis_path, "hierarchy.RDS"))$hierarchy
+
+  # Convert Assignment cell subsets to strings.
+  assignment <- setdiff(hierarchy$CellSubset, hierarchy$Parent)
+  descs <- lapply(orloj::nameVector(assignment), function(cell_subset) {
+    channels <-
+      .getSubsetChannelsFull(hierarchy, experiment$class_channels, cell_subset)
+    data.frame(
+      CellSubset = cell_subset,
+      Desc = .convertChannelsToDesc(channels),
+      stringsAsFactors = FALSE
+    )
+  }) %>% dplyr::bind_rows()
+
+  # Order according to Level_1 order.
+  level_ones <- lapply(orloj::nameVector(assignment), function(cell_subset) {
+    curr_subset <- cell_subset
+    while (curr_subset != "Root") {
+      parent <- curr_subset
+      curr_subset <- hierarchy$Parent[hierarchy$CellSubset == curr_subset]
+    }
+    
+    data.frame(
+      Parent = parent,
+      CellSubset = cell_subset,
+      stringsAsFactors = FALSE
+    )
+  }) %>% dplyr::bind_rows()
+  level_ones <- level_ones[gtools::mixedorder(level_ones$Parent), ]
+
+  dplyr::left_join(level_ones, descs, by = "CellSubset")
+}
+
+.getSubsetChannels <- function(hierarchy, class_channels, cell_subset) {
+  # Get data frame with state of each channel for given subset.
+  hierarchy <- hierarchy[hierarchy$CellSubset == cell_subset, ]
+  channels <-
+    intersect(class_channels, names(which(colSums(!is.na(hierarchy)) > 0)))
+  hierarchy <- hierarchy[, channels]
+  hierarchy$CellSubset <- cell_subset
+  ch <-
+    reshape2::melt(hierarchy, id.vars = "CellSubset", variable.name = "Channel",
+                   value.name = "State")
+  ch$Channel <- as.character(ch$Channel)
+  ch[gtools::mixedorder(ch$Channel), ]
+}
+
+.getSubsetChannelsFull <- function(hierarchy, class_channels, cell_subset) {
+  # Get data frame with state of each channel for given subset, spanning the
+  # entire hierarchy.
+  df <- data.frame()
+  while (cell_subset != "Root") {
+    df <- rbind(.getSubsetChannels(hierarchy, class_channels, cell_subset), df)
+    cell_subset <- hierarchy$Parent[hierarchy$CellSubset == cell_subset]
+  }
+  df
+}
+
+.convertChannelsToDesc <- function(channels) {
+  # Convert channels data frame to a string.
+  channels$StateStr <- ifelse(channels$State, "+", "-")
+  # Use factors to maintain subset order.
+  channels$CellSubset <-
+    factor(channels$CellSubset, levels = unique(channels$CellSubset))
+  channels <- channels %>%
+    dplyr::group_by(CellSubset) %>%
+    dplyr::summarize(Str = paste0(paste0(Channel, StateStr), collapse = " "))
+  paste0(channels$Str, collapse = ", ")
+}
