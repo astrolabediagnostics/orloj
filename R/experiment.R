@@ -354,6 +354,7 @@ experimentLabelingStrategy <- function(experiment) {
   level_ones <- lapply(orloj::nameVector(assignment), function(cell_subset) {
     curr_subset <- cell_subset
     while (curr_subset != "Root") {
+      curr_subset <- gsub("_unassigned", "", curr_subset)
       parent <- curr_subset
       curr_subset <- hierarchy$Parent[hierarchy$CellSubset == curr_subset]
     }
@@ -388,6 +389,7 @@ experimentLabelingStrategy <- function(experiment) {
   # entire hierarchy.
   df <- data.frame()
   while (cell_subset != "Root") {
+    cell_subset <- gsub("_unassigned", "", cell_subset)
     df <- rbind(.getSubsetChannels(hierarchy, class_channels, cell_subset), df)
     cell_subset <- hierarchy$Parent[hierarchy$CellSubset == cell_subset]
   }
