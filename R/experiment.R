@@ -375,7 +375,7 @@ experimentLabelingStrategy <- function(experiment) {
   hierarchy <- hierarchy[hierarchy$CellSubset == cell_subset, ]
   channels <-
     intersect(class_channels, names(which(colSums(!is.na(hierarchy)) > 0)))
-  hierarchy <- hierarchy[, channels]
+  hierarchy <- hierarchy[, channels, drop = FALSE]
   hierarchy$CellSubset <- cell_subset
   ch <-
     reshape2::melt(hierarchy, id.vars = "CellSubset", variable.name = "Channel",
