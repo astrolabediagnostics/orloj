@@ -76,9 +76,9 @@ isSample <- function(sample) {
 
 .removeEqFromDesc <- function(desc) {
   # Remove "EQ" and other bead-related suffix from channel descriptions.
-  desc <- unlist(lapply(desc, function(s) gsub("_EQ_BEADS", "", s)))
-  desc <- unlist(lapply(desc, function(s) gsub("_BEADS", "", s)))
-  desc <- unlist(lapply(desc, function(s) gsub("_EQ", "", s)))
+  desc <- unlist(lapply(desc, function(s) gsub(".EQ.BEADS", "", s)))
+  desc <- unlist(lapply(desc, function(s) gsub(".BEADS", "", s)))
+  desc <- unlist(lapply(desc, function(s) gsub(".EQ", "", s)))
 
   desc
 }
