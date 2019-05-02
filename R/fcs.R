@@ -213,33 +213,31 @@ identifyFcsInstrument <- function(flow_frame) {
 #' non-bead indices. You can use \code{\link{fcsExprs}} the get the expression
 #' data after applying all of the masks that are in the list.
 #'
+#' @param experiment An Astrolabe experiment.
 #' @param filename The name of the FCS file to import.
 #' @param flow_frame FlowCore flow frame.
 #' @seealso \code{\link{isSample}}, \code{\link{fcsExprs}}
 #' @return FCS data, in orloj internal FCS list format.
 #' @export
-convertFlowFrame <- function(filename, flow_frame) {
+convertFlowFrame <- function(experiment, filename, flow_frame) {
   # Import flow data and channels information.
   channels <- importFcsChannels(filename)
+  # Update channel desc based on experiment desc.
+  channels$Desc <-
+    experiment$channels$Desc[match(channels$Name, experiment$channels$Name)]
+
+  if (any(is.na(channels$Desc))) stop("desc cannot be NA")
+  if (any(channels$Desc == "")) stop("desc cannot be empty")
+  if (any(duplicated(channels$Desc))) stop("desc cannot have duplicates")
 
   # Apply compensation if necessary.
   spill <- flowCore::keyword(flow_frame)$`SPILL`
   if (is.matrix(spill)) flow_frame <- flowCore::compensate(flow_frame, spill)
 
-  exprs <- tibble::as_tibble(flow_frame@exprs)
   desc <- channels$Desc
   name <- channels$Name
-
-  # Decide on column names, desc by default, if no desc use name.
-  exprs_colnames <- desc
-  exprs_colnames[is.na(exprs_colnames)] <- name[is.na(exprs_colnames)]
-  exprs_colnames[exprs_colnames == ""] <- name[exprs_colnames == ""]
-  # Duplicates get name in addition to desc.
-  colnames_dup <-
-    duplicated(exprs_colnames) | duplicated(exprs_colnames, fromLast = TRUE)
-  exprs_colnames[colnames_dup] <-
-    paste0(name[colnames_dup], "_", exprs_colnames[colnames_dup])
-  colnames(exprs) <- exprs_colnames
+  exprs <- tibble::as_tibble(flow_frame@exprs)
+  colnames(exprs) <- desc
 
   list(
     exprs = exprs,

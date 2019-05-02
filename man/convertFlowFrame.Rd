@@ -4,9 +4,11 @@
 \alias{convertFlowFrame}
 \title{Convert a FlowCore flow_frame to Astrolabe sample.}
 \usage{
-convertFlowFrame(filename, flow_frame)
+convertFlowFrame(experiment, filename, flow_frame)
 }
 \arguments{
+\item{experiment}{An Astrolabe experiment.}
+
 \item{filename}{The name of the FCS file to import.}
 
 \item{flow_frame}{FlowCore flow frame.}
