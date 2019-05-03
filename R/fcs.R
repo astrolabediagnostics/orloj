@@ -223,8 +223,9 @@ convertFlowFrame <- function(experiment, filename, flow_frame) {
   # Import flow data and channels information.
   channels <- importFcsChannels(filename)
   # Update channel desc based on experiment desc.
-  channels$Desc <-
-    experiment$channels$Desc[match(channels$Name, experiment$channels$Name)]
+  match_indices <- match(channels$Name, experiment$channels$Name)
+  channels$Desc[!is.na(match_indices)] <-
+    experiment$channels$Desc[match_indices(!is.na(match_indices))]
 
   if (any(is.na(channels$Desc))) stop("desc cannot be NA")
   if (any(channels$Desc == "")) stop("desc cannot be empty")
