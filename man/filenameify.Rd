@@ -4,10 +4,12 @@
 \alias{filenameify}
 \title{Convert a string into a filename-friendly format.}
 \usage{
-filenameify(str)
+filenameify(str, extension = NULL)
 }
 \arguments{
 \item{str}{A string.}
+
+\item{extension}{Optional: Filename extension.}
 }
 \value{
 A filename-friendly format of that string.

@@ -60,9 +60,10 @@ addBackticks <- function(str) {
 #' non-alphanumeric character to underscore.
 #'
 #' @param str A string.
+#' @param extension Optional: Filename extension.
 #' @return A filename-friendly format of that string.
 #' @export
-filenameify <- function(str) {
+filenameify <- function(str, extension = NULL) {
   str <- gsub("\\+$", "pos", str)
   str <- gsub("\\+ ", "pos ", str)
   str <- gsub("\\+)", "pos)", str)
@@ -75,6 +76,8 @@ filenameify <- function(str) {
   str <- gsub("\\(", "", str)
 
   str <- gsub("[^[:alnum:]]", "_", str)
+
+  if (!is.null(extension)) str <- paste0(str, ".", extension)
 
   str
 }
