@@ -141,6 +141,7 @@ plotBarPlot <- function(data,
     plt <- plt + geom_col(aes_string(fill = fill_bt))
   }
   plt <- plt +
+    theme_linedraw() +
     theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.3))
 
   if (!is.null(title)) plt <- plt + labs(title = title)
@@ -171,12 +172,16 @@ plotBarPlot <- function(data,
 
 #' Scatter plot object.
 #'
-#' Generates a biaxial scatter plot ggplot object.
+#' Generates a biaxial scatter plot ggplot object from an Astrolabe sample or
+#' a data frame.
 #'
 #' @param data Dataset to use for the plot. If sample, exprs will be used.
 #' @param x,y Column names for X-axis and Y-axis, respectively.
 #' @param color Column name for the color aesthetic.
 #' @param alpha geom_point alpha aesthetic.
+#' @param size geom_point size aesthetic.
+#' @param xlim x-axis limits.
+#' @param ylim y-axis limits.
 #' @param title Plot title.
 #' @param theme Modifications to the default ggplot theme.
 #' @param force_data If false, plots with more than 100 points won't have plot
@@ -191,6 +196,8 @@ plotScatterPlot <- function(data,
                             color = NULL,
                             alpha = 0.5,
                             size = 1,
+                            xlim = NULL,
+                            ylim = NULL,
                             title = NULL,
                             theme = NULL,
                             force_data = FALSE) {
@@ -213,16 +220,31 @@ plotScatterPlot <- function(data,
       geom_point(aes_string(color = color_bt),
                  alpha = alpha,
                  size = size) +
-      guides(color = guide_legend(override.aes = list(size = 2, alpha = 1))) +
-      theme(legend.position = "bottom")
+      guides(color = guide_legend(override.aes = list(size = 2, alpha = 1)))
+
+    # If only two colors, switch to grey/jade color scheme.
+    if (length(unique(data[[color]]) == 2)) {
+      plt <-
+        plt +
+        scale_color_manual(values = c("grey70", "#1C3C44"))
+    }
   }
 
+  if (!is.null(xlim)) plt <- plt + ggplot2::xlim(xlim)
+  if (!is.null(ylim)) plt <- plt + ggplot2::ylim(ylim)
   if (!is.null(title)) plt <- plt + labs(title = title)
   if (!is.null(theme)) plt <- plt + theme
 
+  # Use aspect.ratio = 1 and linedraw as default Astrolabe theme.
+  plt <-
+    plt +
+    theme_linedraw() +
+    theme(aspect.ratio = 1,
+          legend.position = "bottom")
+
   # Default width and height for scatter plots.
-  width <- 600
-  height <- 600
+  width <- 400
+  height <- 400
   # Generate data.
   if (nrow(data) > 100 & !force_data) {
     data <- NULL

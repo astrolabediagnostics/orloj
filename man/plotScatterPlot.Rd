@@ -5,7 +5,8 @@
 \title{Scatter plot object.}
 \usage{
 plotScatterPlot(data, x, y, color = NULL, alpha = 0.5, size = 1,
-  title = NULL, theme = NULL, force_data = FALSE)
+  xlim = NULL, ylim = NULL, title = NULL, theme = NULL,
+  force_data = FALSE)
 }
 \arguments{
 \item{data}{Dataset to use for the plot. If sample, exprs will be used.}
@@ -15,6 +16,12 @@ plotScatterPlot(data, x, y, color = NULL, alpha = 0.5, size = 1,
 \item{color}{Column name for the color aesthetic.}
 
 \item{alpha}{geom_point alpha aesthetic.}
+
+\item{size}{geom_point size aesthetic.}
+
+\item{xlim}{x-axis limits.}
+
+\item{ylim}{y-axis limits.}
 
 \item{title}{Plot title.}
 
@@ -28,5 +35,6 @@ An orloj plot list with the plot object and any other parameters that
 are required to export it.
 }
 \description{
-Generates a biaxial scatter plot ggplot object.
+Generates a biaxial scatter plot ggplot object from an Astrolabe sample or
+a data frame.
 }

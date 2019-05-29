@@ -69,7 +69,7 @@ reportCellAssignments <- function(sample,
                              y = level_col,
                              value = "Intensity",
                              type = "cluster_labels",
-                             title = name,
+                             title = paste0(name, ": Median"),
                              x_axis_order = channel_order)
 
       # Figure: CV(Intensity) heatmap.

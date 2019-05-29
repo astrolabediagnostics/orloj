@@ -34,7 +34,7 @@ reportCellCounts <- function(sample, report_levels = FALSE) {
       orloj::plotBarPlot(parent_cell_counts,
                          x = "CellSubset",
                          y = "N",
-                         title = parent_label,
+                         title = paste0(parent_label, ": Cell Counts"),
                          theme = NULL)
     plt_list$plt <- plt_list$plt + ggplot2::scale_y_continuous(labels = scales::comma)
 

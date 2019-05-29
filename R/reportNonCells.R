@@ -8,6 +8,9 @@
 reportNonCells <- function(sample) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
+  # Figure dimensions.
+  fig_len <- 400
+
   exprs <- fcsExprs(sample, keep_debris = TRUE, keep_dead = TRUE)
 
   # Set standard naming for Event Length and DNA columns.
@@ -20,8 +23,9 @@ reportNonCells <- function(sample) {
   colnames(exprs)[dna191_idx] <- "DNA"
 
   # Decide on axis limits.
-  dna_lim <- c(0, ceiling(max(exprs[[dna191_idx]])))
-  event_length_lim <- c(0, ceiling(max(exprs[[event_length_idx]])))
+  dna_lim <- c(0, ceiling(max(exprs[[dna191_idx]]) / 0.25) * 0.25)
+  event_length_lim <-
+    c(0, ceiling(max(exprs[[event_length_idx]]) / 0.25) * 0.25)
 
   report <- list()
 
@@ -39,10 +43,11 @@ reportNonCells <- function(sample) {
     labs(title = "Preprocessing Debris and Doublets", x = "Event Length") +
     xlim(event_length_lim) + ylim(dna_lim) +
     facet_wrap(~ EventType) +
+    theme_linedraw() +
     theme(aspect.ratio = 1)
-  width <- length(unique(exprs$EventType)) * 600
+  width <- length(unique(exprs$EventType)) * fig_len
     
-  report$PreprocessingDebris <- list(plt = plt, width = width, height = 600)
+  report$PreprocessingDebris <- list(plt = plt, width = width, height = fig_len)
 
 
   # Generate Ek'balam debris and Root_unassigned figure.
@@ -68,10 +73,11 @@ reportNonCells <- function(sample) {
     labs(title = "Cell Labeling Debris and Unassigned", x = "Event Length") +
     xlim(event_length_lim) + ylim(dna_lim) +
     facet_wrap(~ EventType) +
+    theme_linedraw() +
     theme(aspect.ratio = 1)
-  width <- length(unique(exprs_clean$EventType)) * 600
+  width <- length(unique(exprs_clean$EventType)) * fig_len
     
-  report$CellLabelingDebris <- list(plt = plt, width = width, height = 600)
+  report$CellLabelingDebris <- list(plt = plt, width = width, height = fig_len)
   
   if (any(exprs$Dead)) {
     # Generate live/dead report.
@@ -81,7 +87,7 @@ reportNonCells <- function(sample) {
   
     # Figure: DNA versus cisplatin.
     livedead_idx <- standard_channels$livedead_idx
-    livedead_lim <- c(0, ceiling(max(exprs[[livedead_idx]])))
+    livedead_lim <- c(0, ceiling(max(exprs[[livedead_idx]]) * 0.25) / 0.25)
     n_alive <- sum(!exprs$Dead)
     per_alive <- mean(!exprs$Dead)
     df <- data.frame(
@@ -100,7 +106,7 @@ reportNonCells <- function(sample) {
                     round(per_alive * 100, 1), "%) live events"),
            y = "Live/Dead") +
       theme(aspect.ratio = 1)
-    report$LiveDead <- list(plt = plt, width = 600, height = 600)
+    report$LiveDead <- list(plt = plt, width = fig_len, height = fig_len)
   }
     
   report
