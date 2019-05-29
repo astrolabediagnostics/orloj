@@ -58,6 +58,30 @@ loadSample <- function(experiment, sample_id = NULL, sample_name = NULL) {
   sample
 }
 
+#' Get sample name.
+#'
+#' @param experiment An Astrolabe experiment.
+#' @param sample_id Astrolabe sample ID.
+#' @return The sample's name, as supplied by user.
+#' @export
+getSampleName <- function(experiment, sample_id) {
+  sample_row <- subset(experiment$samples, SampleId == sample_id)
+  if (nrow(sample_row) != 1) stop("cannot find sample in experiment")
+  sample_row$Name
+}
+
+#' Get sample filename.
+#'
+#' @param experiment An Astrolabe experiment.
+#' @param sample_id Astrolabe sample ID.
+#' @return The sample's filename.
+#' @export
+getSampleFilename <- function(experiment, sample_id) {
+  sample_row <- subset(experiment$samples, SampleId == sample_id)
+  if (nrow(sample_row) != 1) stop("cannot find sample in experiment")
+  sample_row$Filename
+}
+
 #' Astrolabe sample summary.
 #'
 #' @param sample An Astrolabe sample.
