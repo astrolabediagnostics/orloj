@@ -54,14 +54,16 @@ reportCombineAggregateStatistics <- function(experiment) {
                   x = "CellSubset",
                   y = "SampleName",
                   value = "Frequency",
-                  type = "frequency")
+                  type = "frequency",
+                  title = paste0(analysis, ": Frequency Heat Map"))
     # Figure: Heatmap of scaled cell subset frequency by sample.
     report[["scaled_frequency_heatmap"]] <-
       plotHeatmap(cell_counts,
                   x = "CellSubset",
                   y = "SampleName",
                   value = "ScaledFrequency",
-                  type = "scaled_frequency")
+                  type = "scaled_frequency",
+                  title = paste0(analysis, ": Scaled Frequency Heat Map"))
     # Figure: Bar plot of each cell subset.
     report[["bar_plots"]] <- list()
     for (cell_subset in unique(cell_counts$CellSubset)) {

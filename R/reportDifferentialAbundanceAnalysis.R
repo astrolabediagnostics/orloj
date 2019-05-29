@@ -108,10 +108,16 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
       } else {
         stop("feature_top_tags does not include logFC or maxLogFc")
       }
+      # Calculate symmetric X limit for volcano plot.
+      volcano_x <- feature_top_tags[[volcano_plot_x]]
+      volcano_xlim <- volcano_x[which.max(abs(volcano_x))]
+      volcano_xlim <- ceiling(volcano_xlim / 0.25) * 0.25
       volcano_plt_list <-
         plotScatterPlot(feature_top_tags,
                         x = volcano_plot_x,
-                        y = "negLog10Fdr")
+                        y = "negLog10Fdr",
+                        xlim = c(-volcano_xlim, volcano_xlim),
+                        title = paste0(feature_name, ": Volcano Plot"))
       volcano_plt_list$plt <- volcano_plt_list$plt +
         ggrepel::geom_text_repel(aes(label = CellSubset))
       feature_report[["volcano"]] <- volcano_plt_list
@@ -130,7 +136,7 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
         # Format FDR nicely for figure title.
         fdr <-
           dplyr::filter(feature_top_tags, CellSubset == cell_subset_label)$FDR
-        fdr_str <- paste0("(", formatPvalue(fdr, "FDR"), ")")
+        fdr_str <- paste0(formatPvalue(fdr, "FDR"))
         fig_title <- cell_subset_label
         fig_subtitle <- fdr_str
 

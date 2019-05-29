@@ -142,7 +142,8 @@ plotBarPlot <- function(data,
   }
   plt <- plt +
     theme_linedraw() +
-    theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.3))
+    theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.3),
+          legend.position = "bottom")
 
   if (!is.null(title)) plt <- plt + labs(title = title)
   if (!is.null(scale_y_labels)) {
@@ -288,7 +289,8 @@ plotBoxPlot <- function(data,
 
   plt <-
     ggplot(data, aes_string(x = x_bt, y = y_bt)) +
-    geom_boxplot()
+    geom_boxplot() +
+    theme_linedraw()
 
   if (!is.null(title)) plt <- plt + labs(title = title)
   if (!is.null(scale_y_labels)) {

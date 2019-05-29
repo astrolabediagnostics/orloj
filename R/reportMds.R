@@ -6,6 +6,8 @@
 #' @import ggplot2 viridis ggrepel patchwork
 #' @export
 reportMds <- function(experiment) {
+  fig_len <- 600
+
   report <- list()
 
   analyses <- c("Assignment", "Profiling")
@@ -24,13 +26,13 @@ reportMds <- function(experiment) {
       ggplot(mds, aes(x = V1, y = V2)) +
       geom_point(size = 3) +
       ggrepel::geom_text_repel(aes(label = CellSubset)) +
-      labs(title = paste0("MDS map for ", level),
-           x = "MDS Map 1", y = "MDS Map 2") +
+      labs(title = paste0(level, ": MDS map"), x = "MDS 1", y = "MDS 2") +
       theme(aspect.ratio = 1,
             axis.text = element_blank(),
             axis.ticks = element_blank(),
             panel.background = element_blank())
-    map_plt <- list(plt = map_obj, width = 900, height = 900, data = mds)
+    map_plt <-
+      list(plt = map_obj, width = fig_len, height = fig_len, data = mds)
     report[[level]]$mds_map <- map_plt
 
     # Remove data for all further plots, no need to duplicate it.
@@ -44,16 +46,14 @@ reportMds <- function(experiment) {
       map_obj <-
         ggplot(mds, aes(x = V1, y = V2)) +
         geom_point(aes_string(color = channel_bt), size = 3) +
-        ggrepel::geom_text_repel(aes(label = CellSubset)) +
         viridis::scale_color_viridis(direction = -1) +
-        labs(title = paste0("MDS map for ", level),
-             x = "MDS Map 1", y = "MDS Map 2") +
+        labs(title = paste0(level, ": MDS map"), x = "MDS 1", y = "MDS 2") +
         theme(aspect.ratio = 1,
               axis.text = element_blank(),
               axis.ticks = element_blank(),
               legend.position = "bottom",
               panel.background = element_blank())
-      map_plt <- list(plt = map_obj, width = 900, height = 900)
+      map_plt <- list(plt = map_obj, width = fig_len, height = fig_len)
       report[[level]][[paste0("channel_", channel_filename)]] <- map_plt
     }
 
@@ -96,12 +96,12 @@ reportMds <- function(experiment) {
 
   pearson_rho <- round(with(dist_df, cor(Dist, MDSDist)), 2)
 
-  plt_title <- paste0("MDS Map Shepard Plot (Pearson rho = ", pearson_rho, ")")
   plt <- orloj::plotScatterPlot(dist_df, x = "Dist", y = "MDSDist", alpha = 0.1)
   plt$plt <-
     plt$plt +
-    labs(title = plt_title,
-         x = "Original Sample Distance", y = "MDS Map Distance") +
+    labs(title = paste0(level, ": MDS Map Shepard Plot"),
+         subtitle = paste0("Pearson's rho = ", pearson_rho),
+         x = "High-Dimensional Distance", y = "MDS Map Distance") +
     theme(aspect.ratio = 1)
 
   plt
