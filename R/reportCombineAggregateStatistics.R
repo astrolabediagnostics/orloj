@@ -80,7 +80,9 @@ reportCombineAggregateStatistics <- function(experiment) {
 
     # Add a CSV with median marker intensities over all samples and subsets.
     channel_subset_statistics <-
-      .getSubsetChannelStatistics(aggregate_statistics, analysis)
+      .getSubsetChannelStatistics(experiment, aggregate_statistics, analysis)
+    report[["sample_subset_means"]] <-
+      list(data = channel_subset_statistics$scs_mean)
     report[["sample_subset_medians"]] <-
       list(data = channel_subset_statistics$scs_median)
     report[["sample_subset_cvs"]] <-
@@ -111,32 +113,31 @@ getCellCounts <- function(aggregate_statistics, analysis) {
   }
 }
 
-.getSubsetChannelStatistics <- function(aggregate_statistics, analysis) {
+.getSubsetChannelStatistics <- function(experiment, aggregate_statistics,
+                                        analysis) {
   # Reorganize subset channel statistics into one CSVs: median and CV. Each CSV
   # includes statistics from all samples and cell subsets, including sample
   # features as columns.
 
   if (analysis == "Profiling") analysis <- "Profile"
 
-  # Organize sample features: Map feature IDs to names and add sample names.
-  features <- experiment$features
-  if (nrow(features) == 0) {
+  # Get same features.
+  sample_features <- getExperimentSampleFeatures(experiment)
+  if (nrow(sample_features) == 0) {
     sample_features <- experiment$samples
-    feature_names <- c()
   } else {
-    sample_features <- experiment$sample_features
-    feature_names <- features$FeatureName
-    features$FeatureId <- paste0("feature_", features$FeatureId)
-    m <- match(features$FeatureId, colnames(sample_features))
-    colnames(sample_features)[m] <- feature_names
     sample_features <-
-      dplyr::left_join(sample_features, experiment$samples, by = "SampleId")
+      dplyr::left_join(experiment$samples, sample_features, by = "SampleId")
   }
 
   # Reshape channel aggregate statistics into wide (one for median, one for CV).
   scs <- aggregate_statistics$subset_channel_statistics
   scs <- scs[scs$Parent == analysis, ]
   scs$Cv <- scs$Sd / scs$Mean
+  scs_mean <-
+    reshape2::dcast(scs,
+                    SampleId + ChannelName ~ CellSubset,
+                    value.var = "Mean")
   scs_median <-
     reshape2::dcast(scs,
                     SampleId + ChannelName ~ CellSubset,
@@ -147,12 +148,14 @@ getCellCounts <- function(aggregate_statistics, analysis) {
                     value.var = "Cv")
 
   # Combine each data frame with sample features and reorganize column order.
+  scs_mean <- dplyr::left_join(scs_mean, sample_features, by = "SampleId")
   scs_median <- dplyr::left_join(scs_median, sample_features, by = "SampleId")
   scs_cv <- dplyr::left_join(scs_cv, sample_features, by = "SampleId")
-  cols <- c("SampleId", "Name", "Filename", feature_names)
+  cols <- colnames(sample_features)
   cols <- c(cols, setdiff(colnames(scs_median), cols))
+  scs_mean <- scs_mean[, cols]
   scs_median <- scs_median[, cols]
   scs_cv <- scs_cv[, cols]
 
-  list(scs_median = scs_median, scs_cv = scs_cv)
+  list(scs_mean = scs_mean, scs_median = scs_median, scs_cv = scs_cv)
 }
