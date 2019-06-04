@@ -29,9 +29,13 @@ loadExperiment <- function(experiment_path) {
 #' @return Experiment sample features.
 #' @export
 getExperimentSampleFeatures <- function(experiment) {
-  features <- experiment$features
-  features$FeatureId <- paste0("feature_", features$FeatureId)
   sample_features <- experiment$sample_features
+  features <- experiment$features
+
+  # Experiment has no features, return just column with sample IDs.
+  if (ncol(features) == 0) return(experiment$samples[, "SampleId"])
+
+  features$FeatureId <- paste0("feature_", features$FeatureId)
   m <- match(colnames(sample_features), features$FeatureId)
   col_indices <- !is.na(m)
   colnames(sample_features)[col_indices] <- features$FeatureName[m[col_indices]]
