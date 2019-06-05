@@ -224,7 +224,7 @@ plotScatterPlot <- function(data,
       guides(color = guide_legend(override.aes = list(size = 2, alpha = 1)))
 
     # If only two colors, switch to grey/jade color scheme.
-    if (length(unique(data[[color]]) == 2)) {
+    if (length(unique(data[[color]])) == 2) {
       plt <-
         plt +
         scale_color_manual(values = c("grey70", "#1C3C44"))
