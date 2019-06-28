@@ -13,7 +13,7 @@ reportBeads <- function(sample) {
     fcsExprs(sample, keep_beads = TRUE, keep_dead = TRUE, keep_debris = TRUE)
   
   # No beads were found, nothing to report.
-  if (sum(exprs$Bead) == 0) return(NULL)
+  if (sum(exprs$AstrolabeBead) == 0) return(NULL)
   
   # Set up expression with standard bead channel names.
   bead_channel_indices <- match(beadChannelNames(), sample$parameter_name)
@@ -21,13 +21,14 @@ reportBeads <- function(sample) {
   bead_channel_indices <- bead_channel_indices[existing_beads]
   bead_channel_names <- beadChannelNames()[existing_beads]
   
-  bead_channel_idx <- which(colnames(exprs) == "Bead")
+  bead_channel_idx <- which(colnames(exprs) == "AstrolabeBead")
   exprs <- exprs[, c(bead_channel_indices, bead_channel_idx)]
-  colnames(exprs) <- c(bead_channel_names, "Bead")
+  colnames(exprs) <- c(bead_channel_names, "AstrolabeBead")
   
   # Rename True/False to Bead/Cell.
-  exprs$Bead <-
-    factor(ifelse(exprs$Bead, "Bead", "Cell"), levels = c("Cell", "Bead"))
+  exprs$AstrolabeBead <-
+    factor(ifelse(exprs$AstrolabeBead, "AstrolabeBead", "Cell"),
+           levels = c("Cell", "AstrolabeBead"))
   
   # Figure: First bead channel (on Y-axis) versus all of the other channels. Use
   # patchwork to combine all of them to single plot.
@@ -38,7 +39,7 @@ reportBeads <- function(sample) {
   width <- 0
   height <- 0
   for (x in xs) {
-    x_plt <- plotScatterPlot(exprs, x, y, "Bead", ylim = ylim)
+    x_plt <- plotScatterPlot(exprs, x, y, "AstrolabeBead", ylim = ylim)
     if (is.null(plt)) {
       plt <- x_plt$plt
     } else {

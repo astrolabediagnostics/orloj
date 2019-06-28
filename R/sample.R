@@ -93,7 +93,7 @@ sampleSummary <- function(sample) {
     " and ", ncol(sample$exprs), " channels\n"
   ))
   cat(paste0(
-    sum(exprs$Bead), " beads, ",
+    sum(exprs$AstrolabeBead), " beads, ",
     sum(exprs$Debris), " debris and doublets, ",
     "and ",
     sum(exprs$Dead), " dead cells\n"))
@@ -110,7 +110,7 @@ sampleSummary <- function(sample) {
 #' @param keep_dead Whether dead events should be kept.
 #' @return Expression data frame.
 #' @export
-fcsExprs <- function(sample,
+1fcsExprs <- function(sample,
                      keep_beads = FALSE,
                      keep_debris = FALSE,
                      keep_dead = FALSE) {
@@ -118,14 +118,14 @@ fcsExprs <- function(sample,
 
   exprs <- sample$exprs
 
-  exprs$Bead    <- FALSE
-  exprs$Dead    <- FALSE
-  exprs$Debris  <- FALSE
+  exprs$AstrolabeBead <- FALSE
+  exprs$Dead          <- FALSE
+  exprs$Debris        <- FALSE
 
   # Mark beads.
   if (!is.null(sample$non_bead_indices)) {
-    exprs$Bead <- TRUE
-    exprs$Bead[sample$non_bead_indices] <- FALSE
+    exprs$AstrolabeBead <- TRUE
+    exprs$AstrolabeBead[sample$non_bead_indices] <- FALSE
   }
 
   # Mark debris and doublets.
@@ -145,14 +145,14 @@ fcsExprs <- function(sample,
       live_indices[-c(sample$debris_indices, sample$doublet_indices)]
     live_indices <- live_indices[sample$live_indices]
     exprs$Dead <- TRUE
-    exprs$Dead[exprs$Bead | exprs$Debris] <- FALSE
+    exprs$Dead[exprs$AstrolabeBead | exprs$Debris] <- FALSE
     exprs$Dead[live_indices] <- FALSE
   }
 
   # Incorporate cell assignments.
   if (!is.null(sample$cell_assignments)) {
     cell_assignments <- sample$cell_assignments$cell_assignments
-    ca_indices <- which(!exprs$Bead & !exprs$Dead & !exprs$Debris)
+    ca_indices <- which(!exprs$AstrolabeBead & !exprs$Dead & !exprs$Debris)
     if (length(ca_indices) != nrow(cell_assignments)) {
       stop("number of rows in cell_assignments different than expected")
     }
@@ -177,20 +177,22 @@ fcsExprs <- function(sample,
     }
     exprs$Debris[exprs$Assignment %in% debris_labels] <- TRUE
 
-    # Update Assignment to Bead/Debris/Dead values.
-    exprs$Assignment[exprs$Bead] <- "Bead"
+    # Update Assignment to AstrolabeBead/Debris/Dead values.
+    exprs$Assignment[exprs$AstrolabeBead] <- "AstrolabeBead"
     exprs$Assignment[exprs$Debris] <- "Debris"
     exprs$Assignment[exprs$Dead] <- "Dead"
 
     # Incorporate profiling.
     if (!is.null(sample$subset_profiling_assignment)) {
       profile <- sample$subset_profiling_assignment$Profile
-      profile_indices <- which(!exprs$Bead & !exprs$Dead & !exprs$Debris)
+      profile_indices <-
+        which(!exprs$AstrolabeBead & !exprs$Dead & !exprs$Debris)
       if (length(profile_indices) != length(profile)) {
         # Reverse compatibility: Length mismatch might be due to older version
         # of orloj treating Root_unassigned as debris.
         exprs$Debris[exprs$Assignment == "Root_unassigned"] <- TRUE
-        profile_indices <- which(!exprs$Bead & !exprs$Dead & !exprs$Debris)
+        profile_indices <-
+          which(!exprs$AstrolabeBead & !exprs$Dead & !exprs$Debris)
         if (length(profile_indices) != length(profile)) {
           # Length still different, report error.
           stop("length of profile different than expected")
@@ -202,7 +204,7 @@ fcsExprs <- function(sample,
   }
 
   # Remove any unnecessary events.
-  if (!keep_beads) exprs <- exprs[!exprs$Bead, ]
+  if (!keep_beads) exprs <- exprs[!exprs$AstrolabeBead, ]
   if (!keep_debris) exprs <- exprs[!exprs$Debris, ]
   if (!keep_dead) exprs <- exprs[!exprs$Dead, ]
 

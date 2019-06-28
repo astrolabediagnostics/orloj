@@ -208,7 +208,7 @@ experimentCellSubsetMap <- function(experiment,
       df,
       data.frame(
         Value = c(n + 1, n + 2, n + 3),
-        CellSubset = c("Bead", "Debris", "Dead"),
+        CellSubset = c("AstrolabeBead", "Debris", "Dead"),
         stringsAsFactors = FALSE
       ))
   df
