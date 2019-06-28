@@ -110,7 +110,7 @@ sampleSummary <- function(sample) {
 #' @param keep_dead Whether dead events should be kept.
 #' @return Expression data frame.
 #' @export
-1fcsExprs <- function(sample,
+fcsExprs <- function(sample,
                      keep_beads = FALSE,
                      keep_debris = FALSE,
                      keep_dead = FALSE) {
