@@ -175,6 +175,12 @@ fcsExprs <- function(sample,
         debris_labels <- c(debris_labels, "Granulocyte")
       }
     }
+    if (!is.null(sample$root_unassigned_is_debris)) {
+      if (sample$root_unassigned_is_debris) {
+        # Set granulocyte to debris if required by experiment.
+        debris_labels <- c(debris_labels, "Root_unassigned")
+      }
+    }
     exprs$Debris[exprs$Assignment %in% debris_labels] <- TRUE
 
     # Update Assignment to AstrolabeBead/Debris/Dead values.
