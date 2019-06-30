@@ -33,7 +33,8 @@ isSample <- function(sample) {
   # description field of an FCS file (and include additional values) we will
   # remove them.
   c(
-    "89Y",   "Y89",   "113In", "In113", "115In", "In115", "131Xe", "Xe131",
+    "89Y",   "Y89",   "113In", "In113", "115In", "In115", "118Sn", "Sn118",
+    "120Sn", "Sn120", "127I",  "I127",  "131Xe", "Xe131", "133Cs", "Cs133",
     "138Ba", "Ba138", "139La", "La139", "140Ce", "Ce140", "141Pr", "Pr141",
     "142Nd", "Nd142", "142Ce", "Ce142", "143Nd", "Nd143", "144Nd", "Nd144",
     "145Nd", "Nd145", "146Nd", "Nd146", "147Sm", "Sm147", "148Nd", "Nd148",
@@ -45,8 +46,8 @@ isSample <- function(sample) {
     "164Er", "Er164", "164Dy", "Dy164", "165Ho", "Ho165", "166Er", "Er166",
     "167Er", "Er167", "168Er", "Er168", "169Tm", "Tm169", "170Er", "Er170",
     "171Yb", "Yb171", "172Yb", "Yb172", "173Yb", "Yb173", "174Yb", "Yb174",
-    "175Lu", "Lu175", "176Lu", "Lu176", "176Yb", "Yb176", "208Pb", "Pb208",
-    "209Bi", "Bi209"
+    "175Lu", "Lu175", "176Lu", "Lu176", "176Yb", "Yb176", "195Pt", "Pt195",
+    "208Pb", "Pb208", "209Bi", "Bi209"
   )
 }
 
