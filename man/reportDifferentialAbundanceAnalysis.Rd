@@ -12,6 +12,6 @@ reportDifferentialAbundanceAnalysis(experiment)
 \description{
 Generate plots and CSV files that report on differential abundance analysis
 over multiple samples, sample features, and cell subsets. For each sample
-feature, the report includes box plots, bar plots, line plots, and volcano
-plot of analysis results.
+feature, the report includes spreadsheet and volcano plot of analysis
+results.
 }

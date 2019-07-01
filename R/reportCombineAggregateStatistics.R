@@ -45,11 +45,17 @@ reportCombineAggregateStatistics <- function(experiment) {
       dplyr::group_by(CellSubset) %>%
       dplyr::mutate(ScaledFrequency = as.numeric(scale(Frequency))) %>%
       dplyr::ungroup()
-
-    report <- list()
+    # Add sample feature and reorganize columns.
+    sample_features <- getExperimentSampleFeatures(experiment)
+    cell_counts <-
+      dplyr::left_join(cell_counts, sample_features, by = "SampleId")
+    col_order <-
+      c("SampleId", "Filename", "SampleName", experiment$features$FeatureName,
+        "CellSubset", "N", "Frequency", "ScaledFrequency")
+    cell_counts <- cell_counts[, col_order]
 
     # Figure: Heatmap of cell subset frequency by sample.
-    report[["frequency_heatmap"]] <-
+    frequency_heat_map <-
       plotHeatmap(cell_counts,
                   x = "CellSubset",
                   y = "SampleName",
@@ -57,38 +63,30 @@ reportCombineAggregateStatistics <- function(experiment) {
                   type = "frequency",
                   title = paste0(analysis, ": Frequency Heat Map"))
     # Figure: Heatmap of scaled cell subset frequency by sample.
-    report[["scaled_frequency_heatmap"]] <-
+    scaled_frequency_heat_map <-
       plotHeatmap(cell_counts,
                   x = "CellSubset",
                   y = "SampleName",
                   value = "ScaledFrequency",
                   type = "scaled_frequency",
                   title = paste0(analysis, ": Scaled Frequency Heat Map"))
-    # Figure: Bar plot of each cell subset.
-    report[["bar_plots"]] <- list()
-    for (cell_subset in unique(cell_counts$CellSubset)) {
-      cell_subset_counts <- dplyr::filter(cell_counts, CellSubset == cell_subset)
-      plt_list <-
-        plotBarPlot(cell_subset_counts,
-                    x = "SampleName",
-                    y = "Frequency",
-                    title = cell_subset)
-      plt_list$plt <- plt_list$plt +
-        scale_y_continuous(labels = scales::percent)
-      report[["bar_plots"]][[cell_subset]] <- plt_list
-    }
 
-    # Add a CSV with median marker intensities over all samples and subsets.
+    # Generate report.
     channel_subset_statistics <-
       .getSubsetChannelStatistics(experiment, aggregate_statistics, analysis)
-    report[["sample_subset_means"]] <-
-      list(data = channel_subset_statistics$scs_mean)
-    report[["sample_subset_medians"]] <-
-      list(data = channel_subset_statistics$scs_median)
-    report[["sample_subset_cvs"]] <-
-      list(data = channel_subset_statistics$scs_cv)
+    list(
+      # Spreadsheet: Count, frequency, and scaled frequency over all (sample,
+      # subset) pairs.
+      cell_subset_counts = list(data = cell_counts),
+      frequency_heat_map = frequency_heat_map,
+      scaled_frequency_heat_map = scaled_frequency_heat_map,
+      # Spreadsheets: Median, mean, and CV of marker intensities over all
+      # (sample, subset, marker) combinations.
+      sample_subset_means = list(data = channel_subset_statistics$scs_mean),
+      sample_subset_medians = list(data = channel_subset_statistics$scs_median),
+      sample_subset_cvs = list(data = channel_subset_statistics$scs_cv)
 
-    report
+    )
   })
 }
 

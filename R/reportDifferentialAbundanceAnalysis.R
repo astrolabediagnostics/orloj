@@ -2,8 +2,8 @@
 #'
 #' Generate plots and CSV files that report on differential abundance analysis
 #' over multiple samples, sample features, and cell subsets. For each sample
-#' feature, the report includes box plots, bar plots, line plots, and volcano
-#' plot of analysis results.
+#' feature, the report includes spreadsheet and volcano plot of analysis
+#' results.
 #'
 #' @param experiment An Astrolabe experiment.
 #' @import ggplot2 ggrepel
@@ -70,10 +70,6 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
           "feature_",
           dplyr::filter(features, FeatureName == feature_name)$FeatureId
         )
-      feature_report <- list()
-
-      # Remove samples with NA values from figure data.
-      feature_data <- figure_data[figure_data[[feature_r_name]] != feature_na, ]
 
       # Get analysis results for this feature.
       feature_top_tags <- daa[[feature_r_name]]$table
@@ -82,22 +78,6 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
       }
       feature_top_tags <-
         tibble::rownames_to_column(feature_top_tags, "CellSubset")
-      cell_subset_labels <- feature_top_tags$CellSubset
-
-      # Whether to include line plots: sample has a grouping feature, and that
-      # feature varies across current feature.
-      include_line_plots <- FALSE
-      if (!is.null(group_feature_label)) {
-        feature_pairs <-
-          unique(feature_data[, c(feature_r_name, group_feature_label)])
-        include_line_plots <-
-          nrow(feature_pairs) >
-          length(unique(feature_data[[group_feature_label]]))
-      }
-
-      # Table: Result of differential analysis.
-      feature_report[["analysis_results"]] <-
-        list(data = export_daa[[feature_name]])
 
       # Figure: Volcano plot
       feature_top_tags$negLog10Fdr = -log10(feature_top_tags$FDR)
@@ -120,89 +100,12 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
                         title = paste0(feature_name, ": Volcano Plot"))
       volcano_plt_list$plt <- volcano_plt_list$plt +
         ggrepel::geom_text_repel(aes(label = CellSubset))
-      feature_report[["volcano"]] <- volcano_plt_list
 
-      # Figures: Line plots (for non-patient features in experiments that have
-      # patient), box plots, and bar plots.
-      feature_report[["box_plots"]] <- list()
-      feature_report[["bar_plots"]] <- list()
-      if (include_line_plots) feature_report[["line_plots"]] <- list()
-
-      for (cell_subset_label in cell_subset_labels) {
-        # Filter data down to this subset.
-        cell_subset_data <-
-          dplyr::filter(feature_data, CellSubset == cell_subset_label)
-
-        # Format FDR nicely for figure title.
-        fdr <-
-          dplyr::filter(feature_top_tags, CellSubset == cell_subset_label)$FDR
-        fdr_str <- paste0(formatPvalue(fdr, "FDR"))
-        fig_title <- cell_subset_label
-        fig_subtitle <- fdr_str
-
-        # Generate box plot.
-        box_plot <-
-          plotBoxPlot(cell_subset_data,
-                      x = feature_r_name,
-                      y = "Frequency",
-                      scale_y_labels = scales::percent)
-        box_plot$plt <- box_plot$plt +
-          ggtitle(fig_title, subtitle = fig_subtitle) +
-          xlab(feature_name)
-        feature_report[["box_plots"]][[cell_subset_label]] <- box_plot
-
-        # Generate bar plot.
-        sample_order <- dplyr::arrange(cell_subset_data, Frequency)$SampleName
-        cell_subset_data$SampleName <-
-          factor(cell_subset_data$SampleName, levels = sample_order)
-        bar_plot <-
-          plotBarPlot(cell_subset_data,
-                      x = "SampleName",
-                      y = "Frequency",
-                      fill = feature_r_name,
-                      scale_y_labels = scales::percent)
-        bar_plot$plt = bar_plot$plt +
-          ggtitle(fig_title, subtitle = fig_subtitle)
-        feature_report[["bar_plots"]][[cell_subset_label]] <- bar_plot
-
-        # Generate line plot, using the box_plot parameters as base.
-        if (include_line_plots) {
-          # Copy height/width from box plot.
-          line_plot <- box_plot
-          # Reorganize data.
-          line_plot_data <- cell_subset_data %>%
-            dplyr::group_by_(group_feature_label, feature_r_name) %>%
-            dplyr::summarize(Frequency = median(Frequency))
-          # Subset data for labels.
-          label_data <- line_plot_data
-          last_value <- tail(unique(line_plot_data[[feature_r_name]]), 1)
-          label_data <- label_data[label_data[[feature_r_name]] == last_value, ]
-          
-          line_plot$plt <-
-            ggplot(line_plot_data,
-                   aes_string(x = feature_r_name, y = "Frequency")) +
-            geom_line(aes_string(group = group_feature_label)) +
-            geom_text(data = label_data,
-                      aes_string(x = Inf,
-                                 y = "Frequency",
-                                 label = group_feature_label),
-                      hjust = 2, inherit.aes = FALSE) +
-            scale_y_continuous(labels = scales::percent) +
-            labs(title = fig_title, subtitle = fig_subtitle, x = feature_name)
-          # Update the data with a table of values by group variable.
-          line_plot$data <-
-            reshape2::dcast(
-              line_plot_data,
-              as.formula(paste0(group_feature_label, " ~ ", feature_r_name)),
-              value.var = "Frequency"
-            )
-          colnames(line_plot$data)[1] <- group_feature_name
-          
-          feature_report[["line_plots"]][[cell_subset_label]] <- line_plot
-        }
-      }
-
-      feature_report
+      list(
+        # Spreadsheet: Statistical analysis results
+        analysis_results = list(data = export_daa[[feature_name]]),
+        volcano = volcano_plt_list
+      )
     })
   })
 }
