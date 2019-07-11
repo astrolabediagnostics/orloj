@@ -70,6 +70,20 @@ reportCombineAggregateStatistics <- function(experiment) {
                   value = "ScaledFrequency",
                   type = "scaled_frequency",
                   title = paste0(analysis, ": Scaled Frequency Heat Map"))
+    # Figures: Bar plot of each cell subset. 
+    cell_subsets <- unique(cell_counts$CellSubset)
+    bar_plots <- lapply(nameVector(cell_subsets), function(cell_subset) {
+      cell_subset_counts <-
+        dplyr::filter(cell_counts, CellSubset == cell_subset) 
+      plt_list <- 
+        plotBarPlot(cell_subset_counts, 
+                    x = "SampleName", 
+                    y = "Frequency",  
+                    title = cell_subset)  
+      plt_list$plt <- plt_list$plt +  
+        scale_y_continuous(labels = scales::percent)  
+      plt_list
+    })
 
     # Generate report.
     channel_subset_statistics <-
@@ -84,8 +98,8 @@ reportCombineAggregateStatistics <- function(experiment) {
       # (sample, subset, marker) combinations.
       sample_subset_means = list(data = channel_subset_statistics$scs_mean),
       sample_subset_medians = list(data = channel_subset_statistics$scs_median),
-      sample_subset_cvs = list(data = channel_subset_statistics$scs_cv)
-
+      sample_subset_cvs = list(data = channel_subset_statistics$scs_cv),
+      bar_plots = bar_plots
     )
   })
 }

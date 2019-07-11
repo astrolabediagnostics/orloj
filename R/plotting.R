@@ -80,7 +80,7 @@ exportReport <- function(dir,
   for (plot_name in names(report)) {
     if (verbose) message(plot_name)
 
-    plot_name_nice <- gsub("[^[:alnum:]]", "_", plot_name)
+    plot_name_nice <- filenameify(plot_name)
     plot_contents <- names(report[[plot_name]])
     if (is.null(plot_contents)) {
       # Skip empty plots.
