@@ -81,19 +81,21 @@ reportNonCells <- function(sample) {
   
   if (any(exprs$Dead)) {
     # Generate live/dead report.
-    exprs$EventType <- "Alive"
-    exprs$EventType[exprs$Dead] <- "Dead"
-    exprs$EventType <- factor(exprs$EventType, levels = c("Alive", "Dead"))
+    livedead_exprs <- subset(exprs, !Debris)
+    livedead_exprs$EventType <- "Alive"
+    livedead_exprs$EventType[livedead_exprs$Dead] <- "Dead"
+    livedead_exprs$EventType <-
+      factor(livedead_exprs$EventType, levels = c("Alive", "Dead"))
   
     # Figure: DNA versus cisplatin.
     livedead_idx <- standard_channels$livedead_idx
     livedead_lim <- c(0, ceiling(max(exprs[[livedead_idx]]) * 0.25) / 0.25)
-    n_alive <- sum(!exprs$Dead)
-    per_alive <- mean(!exprs$Dead)
+    n_alive <- sum(!livedead_exprs$Dead)
+    per_alive <- mean(!livedead_exprs$Dead)
     df <- data.frame(
-      EventType = exprs$EventType,
-      DNA = exprs[[dna191_idx]],
-      LiveDead = exprs[[livedead_idx]]
+      EventType = livedead_exprs$EventType,
+      DNA = livedead_exprs[[dna191_idx]],
+      LiveDead = livedead_exprs[[livedead_idx]]
     )
     plt <-
       ggplot(mapping = aes(x = DNA, y = LiveDead)) +
@@ -105,6 +107,7 @@ reportNonCells <- function(sample) {
              paste0(prettyNum(n_alive, big.mark = ","), " (",
                     round(per_alive * 100, 1), "%) live events"),
            y = "Live/Dead") +
+      theme_linedraw() +
       theme(aspect.ratio = 1)
     report$LiveDead <- list(plt = plt, width = fig_len, height = fig_len)
   }
