@@ -94,7 +94,7 @@ reportNonCells <- function(sample) {
     per_alive <- mean(!livedead_exprs$Dead)
     df <- data.frame(
       EventType = livedead_exprs$EventType,
-      DNA = livedead_exprs[[dna191_idx]],
+      DNA = livedead_exprs[[standard_channels$dna191_idx]],
       LiveDead = livedead_exprs[[livedead_idx]]
     )
     plt <-
