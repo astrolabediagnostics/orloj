@@ -362,6 +362,8 @@ experimentMds <- function(experiment,
 #' @return User-readable table of the experiment hierarchy.
 #' @export
 experimentLabelingStrategy <- function(experiment) {
+  if (experiment$organism == "profiling_only") return (NULL)
+  
   hierarchy <-
     readRDS(file.path(experiment$analysis_path, "hierarchy.RDS"))$hierarchy
 
