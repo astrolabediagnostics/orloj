@@ -176,42 +176,42 @@ experimentCellSubsetChannelStatistics <- function(experiment,
 #' @export
 experimentCellSubsetMap <- function(experiment,
                                     level = .chooseLevel(experiment)) {
-  if (!(level %in% c("Assignment", "Profiling"))) {
+  if (level == "Assignment") {
+    # Assignment level, get subsets from hierarchy.
+    if (experiment$organism == "profiling_only") {
+      stop("profiling_only experiments do not have Assignment level")
+    }
+
+    cell_subsets <- experimentAssignmentSubsets(experiment)
+  } else if (level == "Profiling") {
+    # Profiling level, get subsets from aggregate_statistics.
+    level <- "Profile"
+
+    aggregate_statistics_filename <-
+      file.path(experiment$analysis_path, "combine_aggregate_statistics.RDS")
+    if (!file.exists(aggregate_statistics_filename)) {
+      stop(paste0(aggregate_statistics_filename, " not found"))
+    }
+    aggregate_statistics <- readRDS(aggregate_statistics_filename)
+    stats <- aggregate_statistics$subset_channel_statistics
+    if (!(level %in% stats$Parent)) {
+      stop("level not found in cell subset channel statistics")
+    }
+
+    cell_subsets <-
+      gtools::mixedsort(unique(stats$CellSubset[stats$Parent == level]))
+  } else {
     stop("level is not \"Assignment\" or \"Profiling\"")
   }
-  if (level == "Profiling") level = "Profile"
 
-  aggregate_statistics_filename <-
-    file.path(experiment$analysis_path, "combine_aggregate_statistics.RDS")
-  if (!file.exists(aggregate_statistics_filename)) {
-    stop(paste0(aggregate_statistics_filename, "not found"))
-  }
-  aggregate_statistics <- readRDS(aggregate_statistics_filename)
+  # Add beads, debris, and dead cells.
+  cell_subsets <- c(cell_subsets, "AstrolabeBead", "Debris", "Dead")
 
-  stats <- aggregate_statistics$subset_channel_statistics
-  if (!(level %in% stats$Parent)) {
-    stop("level not found in cell subset channel statistics")
-  }
-
-  cell_subsets <-
-    gtools::mixedsort(unique(stats$CellSubset[stats$Parent == level]))
-  df <- data.frame(
+  data.frame(
     Value = seq(length(cell_subsets)),
     CellSubset = cell_subsets,
     stringsAsFactors = FALSE
   )
-
-  # Add "bead", "dead", and "debris" at the end of the data frame.
-  n <- nrow(df)
-  df <-
-    rbind(
-      df,
-      data.frame(
-        Value = c(n + 1, n + 2, n + 3),
-        CellSubset = c("AstrolabeBead", "Debris", "Dead"),
-        stringsAsFactors = FALSE
-      ))
-  df
 }
 
 #' Differential abundance analysis.
@@ -436,3 +436,27 @@ experimentLabelingStrategy <- function(experiment) {
     dplyr::summarize(Str = paste0(paste0(Channel, StateStr), collapse = " "))
   paste0(channels$Str, collapse = ", ")
 }
+
+#' List of Assignment subsets.
+#'
+#' Return a vector of all Assignment subsets.
+#''
+#' @param experiment An Astrolabe experiment.
+#' @return Character vector of Assignment subsets.
+#' @export
+experimentAssignmentSubsets <- function(experiment) {
+  if (experiment$organism == "profiling_only") return(NULL)
+  
+  subsets <- experimentLabelingStrategy(experiment)$CellSubset
+  
+  if (!is.null(experiment$extend_assignment_unassigned) &&
+      experiment$extend_assignment_unassigned) {
+    hierarchy <-
+      readRDS(file.path(experiment$analysis_path, "hierarchy.RDS"))$hierarchy
+    
+    subsets <- c(subsets, paste0(unique(hierarchy$Parent), "_unassigned"))
+  }
+  
+  gtools::mixedsort(subsets)
+}
+
