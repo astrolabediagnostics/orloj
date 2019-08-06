@@ -176,33 +176,28 @@ experimentCellSubsetChannelStatistics <- function(experiment,
 #' @export
 experimentCellSubsetMap <- function(experiment,
                                     level = .chooseLevel(experiment)) {
-  if (level == "Assignment") {
-    # Assignment level, get subsets from hierarchy.
-    if (experiment$organism == "profiling_only") {
-      stop("profiling_only experiments do not have Assignment level")
-    }
+  if (level == "Profiling") level <- "Profile"
 
-    cell_subsets <- experimentAssignmentSubsets(experiment)
-  } else if (level == "Profiling") {
-    # Profiling level, get subsets from aggregate_statistics.
-    level <- "Profile"
-
-    aggregate_statistics_filename <-
-      file.path(experiment$analysis_path, "combine_aggregate_statistics.RDS")
-    if (!file.exists(aggregate_statistics_filename)) {
-      stop(paste0(aggregate_statistics_filename, " not found"))
-    }
-    aggregate_statistics <- readRDS(aggregate_statistics_filename)
-    stats <- aggregate_statistics$subset_channel_statistics
-    if (!(level %in% stats$Parent)) {
-      stop("level not found in cell subset channel statistics")
-    }
-
-    cell_subsets <-
-      gtools::mixedsort(unique(stats$CellSubset[stats$Parent == level]))
-  } else {
-    stop("level is not \"Assignment\" or \"Profiling\"")
+  # Get cell subsets from aggregate statistics.
+  aggregate_statistics_filename <-
+    file.path(experiment$analysis_path, "combine_aggregate_statistics.RDS")
+  if (!file.exists(aggregate_statistics_filename)) {
+    stop(paste0(aggregate_statistics_filename, " not found"))
   }
+  aggregate_statistics <- readRDS(aggregate_statistics_filename)
+  stats <- aggregate_statistics$subset_channel_statistics
+  if (!(level %in% stats$Parent)) {
+    stop("level not found in cell subset channel statistics")
+  }
+  cell_subsets <- unique(stats$CellSubset[stats$Parent == level])
+
+  # If assignment level, complete the list with any subsets that could have
+  # occurred but did not.
+  if (level == "Assignment") {
+    cell_subsets <- union(cell_subsets, experimentAssignmentSubsets(experiment))
+  }
+  
+  cell_subsets <- gtools::mixedsort(cell_subsets)
 
   # Add beads, debris, and dead cells.
   cell_subsets <- c(cell_subsets, "AstrolabeBead", "Debris", "Dead")
