@@ -171,7 +171,7 @@ exportImmport <- function(file_path, experiment, sample_id) {
   ass_profiling_map$ProfilingGate <- ""
   for (idx in seq(nrow(ass_profiling_map))) {
     if (ass_profiling_map$Assignment[idx] !=
-          ass_profiling_map$Profiliing[idx]) {
+          ass_profiling_map$Profiling[idx]) {
       ass_profiling_map$ProfilingGate[idx] <-
         substr(ass_profiling_map$Profiling[idx],
                nchar(ass_profiling_map$Assignment[idx]) + 1,
