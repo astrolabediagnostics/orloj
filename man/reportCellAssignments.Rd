@@ -4,15 +4,12 @@
 \alias{reportCellAssignments}
 \title{Cell assignments report.}
 \usage{
-reportCellAssignments(sample, channels = NULL, report_levels = FALSE)
+reportCellAssignments(sample, channels = NULL)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}
 
 \item{channels}{List of channels to include in report.}
-
-\item{report_levels}{If true, intermediate level heatmaps will be exported
-in addition to terminal level heatmaps.}
 }
 \description{
 Generate plots and CSV files that report on cell assignments to cell subsets.

@@ -9,9 +9,7 @@ experimentCellSubsetMap(experiment, level = .chooseLevel(experiment))
 \arguments{
 \item{experiment}{An Astrolabe experiment.}
 
-\item{level}{Cell subset level. Currently supported levels are "Assignment"
-and "Profiling". The default is "Profiling" for Profiling Only experiments
-and "Assignment" otherwise.}
+\item{level}{Cell subset level.}
 }
 \value{
 Map from cell subsets to numerical values.

@@ -60,7 +60,7 @@ Finally, cell subset counts for the two gating levels are in `/reports/[sample_n
 
 ### Experiment Cell Counts
 
-Figures visualizing subset cell counts across all samples in the experiment can be found in the `/reports/experiment_cell_counts/` directory. As before, Astrolabe exports reports for the `Assignment` and `Profile` levels separately.
+Figures visualizing subset cell counts across all samples in the experiment can be found in the `/reports/experiment_cell_counts/` directory. As before, Astrolabe exports reports for the `Assignment` and `Profiling` levels separately.
 
 For each level, you will find a subset cell count heatmap ([and the accommodating CSV file](examples/frequency_heatmap.jpg.csv)). Here, the X-axis corresponds to cell subsets, the Y-axis corresponds to samples, and tile values are the frequency of that subset in that channel.
 

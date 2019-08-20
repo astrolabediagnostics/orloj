@@ -55,6 +55,13 @@ loadSample <- function(experiment, sample_id = NULL, sample_name = NULL) {
     }
   }
 
+  # Load the experiment-wide cell_subsets, if it exists.
+  cell_subsets_filename <-
+    file.path(experiment$analysis_path, "experiment_cell_subsets.RDS")
+  if (file.exists(cell_subsets_filename)) {
+    sample$cell_subsets <- readRDS(cell_subsets_filename)
+  }
+
   sample
 }
 
@@ -184,23 +191,38 @@ fcsExprs <- function(sample,
 
     # Incorporate profiling.
     if (!is.null(sample$subset_profiling_assignment)) {
-      profile <- sample$subset_profiling_assignment$Profile
-      profile_indices <-
+      profiling <- sample$subset_profiling_assignment$Profile
+      profiling_indices <-
         which(!exprs$AstrolabeBead & !exprs$Dead & !exprs$Debris)
-      if (length(profile_indices) != length(profile)) {
+      if (length(profiling_indices) != length(profiling)) {
         # Reverse compatibility: Length mismatch might be due to older version
         # of orloj treating Root_unassigned as debris.
         exprs$Debris[exprs$Assignment == "Root_unassigned"] <- TRUE
-        profile_indices <-
+        profiling_indices <-
           which(!exprs$AstrolabeBead & !exprs$Dead & !exprs$Debris)
-        if (length(profile_indices) != length(profile)) {
+        if (length(profiling_indices) != length(profiling)) {
           # Length still different, report error.
-          stop("length of profile different than expected")
+          stop("length of profiling different than expected")
         }
       }
-      exprs$Profile <- exprs$Assignment
-      exprs$Profile[profile_indices] <- profile
+      exprs$Profiling <- exprs$Assignment
+      exprs$Profiling[profiling_indices] <- profiling
     }
+  }
+
+  # Incorporate Compartment.
+  if (!is.null(sample$cell_subsets)) {
+    ass_to_compartment_map <-
+      unique(sample$cell_subsets[, c("Assignment", "Compartment")])
+    exprs <- dplyr::left_join(exprs, ass_to_compartment_map, by = "Assignment")
+    exprs$Compartment[is.na(exprs$Compartment)] <- "Other"
+    removed_indices <- which(exprs$Assignment %in% debris_labels)
+    exprs$Compartment[removed_indices] <- exprs$Assignment[removed_indices]
+  }
+
+  if (nrow(exprs) != nrow(sample$exprs)) {
+    # Make sure that we did not mess up the number of rows on exprs.
+    stop("expression size changed from original")
   }
 
   # Remove any unnecessary events.
@@ -217,19 +239,18 @@ fcsExprs <- function(sample,
 #' level.
 #'
 #' @param sample An Astrolabe sample.
-#' @param level Cell subset level. Currently supported levels are "Assignment"
-#' and "Profiling".
+#' @param level Cell subset level, such as "Assignment" or "Profiling".
 #' @return Cell subset counts for that level.
 #' @export
 sampleCellSubsetCounts <- function(sample, level = "Assignment") {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
-  if (!(level %in% c("Assignment", "Profile"))) {
-    stop("level is not \"Assignment\" or \"Profiling\"")
+
+  if (!level %in% sample$aggregate_statistics$subset_cell_counts) {
+    stop("sample does not have this level")
   }
 
-  sample$aggregate_statistics$subset_cell_counts %>%
-    dplyr::filter(Parent == level) %>%
-    dplyr::select(-Parent)
+  subset(sample$aggregate_statistics$subset_cell_counts,
+         Parent == level, select = c("CellSubset", "N"))
 }
 
 #' Cell subset channel statistics.
@@ -238,55 +259,17 @@ sampleCellSubsetCounts <- function(sample, level = "Assignment") {
 #' statistics for a labeling level.
 #'
 #' @param sample An Astrolabe sample.
-#' @param level Cell subset level. Currently supported levels are "Assignment"
-#' and "Profiling".
+#' @param level Cell subset level, such as "Assignment" or "Profiling".
 #' @return Cell subset channel intensity statistics for that level.
 #' @export
 sampleCellSubsetChannelStatistics <- function(sample, level = "Assignment") {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
-  if (!(level %in% c("Assignment", "Profile"))) {
-    stop("level is not \"Assignment\" or \"Profiling\"")
+
+  scs <- sample$aggregate_statistics$subset_channel_statistics
+
+  if (!level %in% sample$aggregate_statistics$subset_cell_counts) {
+    stop("sample does not have this level")
   }
 
-  sample$aggregate_statistics$subset_channel_statistics %>%
-    dplyr::filter(Parent == level) %>%
-    dplyr::select(-Parent)
-}
-
-#' Astrolabe cell subset levels.
-#'
-#' Return a data frame where each row corresponds to one level in the cell
-#' subset classification. This includes levels that come from the hierarchy,
-#' an "Assignment" level, and a terminal "Profile" level.
-#'
-#' @param sample An Astrolabe sample.
-#' @return A data frame with cell subset levels.
-#' @export
-getCellSubsetLevels <- function(sample) {
-  if (!isSample(sample)) stop("Expecting an Astrolabe sample")
-
-  exprs <- fcsExprs(sample)
-  cols <- colnames(exprs)
-  n_levels <- length(grep("Level_", colnames(exprs))) - 1
-
-  levels <- tibble::tibble(Parent = character(0), Level = character(0))
-
-  # Assignment levels.
-  if (n_levels > 0) {
-    levels <- tibble::tibble(
-      Parent = c("Level_0", paste0("Level_", seq(n_levels) - 1)),
-      Level = c("Assignment", paste0("Level_", seq(n_levels)))
-    )
-  }
-
-  # Profiling level.
-  if ("Profile" %in% cols) {
-    levels <-
-      rbind(
-        levels,
-        tibble::tibble(Parent = "Level_0", Level = "Profile")
-      )
-  }
-
-  levels
+  scs %>% dplyr::filter(Parent == level) %>% dplyr::select(-Parent)
 }

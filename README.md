@@ -107,10 +107,10 @@ After loading a sample, you can access its FCS data and cell subset assignments:
 [31] "CD11c"        "CD14"         "CD32"         "CRTH2"        "IkBa"         "FceRIa"      
 [37] "CD63"         "Er167Di"      "Tm169Di"      "CD3"          "pERK"         "CD38"        
 [43] "CD56"         "HLADR"        "pS6"          "Lu176Di"      "Os189Di"      "Ir191Di_DNA" 
-[49] "Ir193Di_DNA"  "Assignment"   "Level_0"      "Level_1"      "Level_2"      "Profile"     
+[49] "Ir193Di_DNA"  "Assignment"   "Level_0"      "Level_1"      "Level_2"      "Profiling"     
 ```
 
-`exprs` is a data frame with a row for each cell. It includes the original FCS data after transformation. Additionally, it has additional columns for Astrolabe's automatic cell subset classifier (gating). `Assignment` and `Profile` correspond to the terminal labels For each cell. The `Level_i` columns correspond to intermediate steps in the hierarchy -- we recommend against using them, unless you would like to focus on a specific subset.
+`exprs` is a data frame with a row for each cell. It includes the original FCS data after transformation. Additionally, it has additional columns for Astrolabe's automatic cell subset classifier (gating). `Assignment` and `Profiling` correspond to the terminal labels For each cell. The `Level_i` columns correspond to intermediate steps in the hierarchy -- we recommend against using them, unless you would like to focus on a specific subset.
 
 > Astrolabe uses hyperbolic arcsine with a cofactor of 5 when transforming mass cytometry data.
 >

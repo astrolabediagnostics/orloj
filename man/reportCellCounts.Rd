@@ -4,15 +4,12 @@
 \alias{reportCellCounts}
 \title{Cell counts report.}
 \usage{
-reportCellCounts(sample, report_levels = FALSE)
+reportCellCounts(sample)
 }
 \arguments{
 \item{sample}{An Astrolabe samlpe.}
-
-\item{report_levels}{If true, intermediate level heatmaps will be exported
-in addition to terminal level heatmaps.}
 }
 \description{
 Generate plots and CSV files that report on cell counts over all cell
-subsets. Report includes bar plots of cell counts by hierarchy parent.
+subsets. Report includes bar plots of cell counts by level.
 }

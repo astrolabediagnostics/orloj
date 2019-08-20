@@ -10,8 +10,7 @@ differentialAbundanceAnalysis(experiment,
 \arguments{
 \item{experiment}{An Astrolabe experiment.}
 
-\item{level}{Cell subset level. Currently supported levels are "Assignment"
-and "Profiling".}
+\item{level}{Cell subset level, such as "Assignment" or "Profiling".}
 
 \item{convert_ids}{Whether to convert Astrolabe IDs to feature names.}
 }

@@ -15,19 +15,15 @@ reportCombineAggregateStatistics <- function(experiment) {
   }
   aggregate_statistics <- readRDS(aggregate_statistics_filename)
 
-  analyses <- c()
-  if ("Assignment" %in% aggregate_statistics$subset_cell_counts$Parent) {
-    analyses <- c(analyses, "Assignment")
-  }
-  if ("Profile" %in% aggregate_statistics$subset_cell_counts$Parent) {
-    analyses <- c(analyses, "Profiling")
-  }
-  analyses <- nameVector(analyses)
+  cell_subsets <-
+    readRDS(file.path(experiment$analysis_path, "experiment_cell_subsets.RDS"))
+  levels <- nameVector(colnames(cell_subsets))
 
-  lapply(analyses, function(analysis) {
-    # Get cell counts for this analysis, match with sample names, and calculate
+  lapply(levels, function(level) {
+    # Get cell counts for this level, match with sample names, and calculate
     # cell subset frequencies.
-    cell_counts <- getCellCounts(aggregate_statistics, analysis)
+    cell_counts <-
+      subset(aggregate_statistics$subset_cell_counts, Parent == level)
     cell_counts <-
       dplyr::left_join(cell_counts, samples, by = "SampleId") %>%
       dplyr::rename(SampleName = Name)
@@ -61,7 +57,7 @@ reportCombineAggregateStatistics <- function(experiment) {
                   y = "SampleName",
                   value = "Frequency",
                   type = "frequency",
-                  title = paste0(analysis, ": Frequency Heat Map"))
+                  title = paste0(level, ": Frequency Heat Map"))
     # Figure: Heatmap of scaled cell subset frequency by sample.
     scaled_frequency_heat_map <-
       plotHeatmap(cell_counts,
@@ -69,7 +65,7 @@ reportCombineAggregateStatistics <- function(experiment) {
                   y = "SampleName",
                   value = "ScaledFrequency",
                   type = "scaled_frequency",
-                  title = paste0(analysis, ": Scaled Frequency Heat Map"))
+                  title = paste0(level, ": Scaled Frequency Heat Map"))
     # Figures: Bar plot of each cell subset. 
     cell_subsets <- unique(cell_counts$CellSubset)
     bar_plots <- lapply(nameVector(cell_subsets), function(cell_subset) {
@@ -87,7 +83,7 @@ reportCombineAggregateStatistics <- function(experiment) {
 
     # Generate report.
     channel_subset_statistics <-
-      .getSubsetChannelStatistics(experiment, aggregate_statistics, analysis)
+      .getSubsetChannelStatistics(experiment, aggregate_statistics, level)
     list(
       # Spreadsheet: Count, frequency, and scaled frequency over all (sample,
       # subset) pairs.
@@ -104,34 +100,11 @@ reportCombineAggregateStatistics <- function(experiment) {
   })
 }
 
-#' Get cell counts for a given analysis type.
-#'
-#' Given an analysis type (such as "Assignment" or "Profiling") get the cell
-#' counts for the respective cell subsets.
-#'
-#' @param aggregate_statistics List of data frames with aggregated statistics,
-#' combined over all samples.
-#' @param analysis Type of analysis for which to get count data.
-#' @return A data fram with cell counts.
-getCellCounts <- function(aggregate_statistics, analysis) {
-  subset_cell_counts <- aggregate_statistics$subset_cell_counts
-
-  if (analysis == "Assignment") {
-    dplyr::filter(subset_cell_counts, Parent == "Assignment")
-  } else if (analysis == "Profiling") {
-    dplyr::filter(subset_cell_counts, Parent == "Profile")
-  } else {
-    stop("Unsupposed analysis type")
-  }
-}
-
 .getSubsetChannelStatistics <- function(experiment, aggregate_statistics,
-                                        analysis) {
+                                        level) {
   # Reorganize subset channel statistics into one CSVs: median and CV. Each CSV
   # includes statistics from all samples and cell subsets, including sample
   # features as columns.
-
-  if (analysis == "Profiling") analysis <- "Profile"
 
   # Get same features.
   sample_features <- getExperimentSampleFeatures(experiment)
@@ -144,7 +117,7 @@ getCellCounts <- function(aggregate_statistics, analysis) {
 
   # Reshape channel aggregate statistics into wide (one for median, one for CV).
   scs <- aggregate_statistics$subset_channel_statistics
-  scs <- scs[scs$Parent == analysis, ]
+  scs <- scs[scs$Parent == level, ]
   scs$Cv <- scs$Sd / scs$Mean
   scs_mean <-
     reshape2::dcast(scs,

@@ -8,18 +8,14 @@
 reportMds <- function(experiment) {
   fig_len <- 600
 
-  report <- list()
+  cell_subsets <-
+    readRDS(file.path(experiment$analysis_path, "experiment_cell_subsets.RDS"))
 
-  analyses <- c("Assignment", "Profiling")
-  if (experiment$organism == "profiling_only") {
-    analyses <- c("Profiling")
-  }
-
-  # Iterate over all analyses and generate figures for each.
-  for (level in analyses) {
+  # Iterate over all cell subset levels and generate MDS maps for each.
+  lapply(nameVector(colnames(cell_subsets)), function(level) {
     mds <- experimentMds(experiment, level = level)
 
-    report[[level]] <- list()
+    report <- list()
 
     # Figure: Plain map, no color-coding.
     map_obj <-
@@ -33,7 +29,7 @@ reportMds <- function(experiment) {
             panel.background = element_blank())
     map_plt <-
       list(plt = map_obj, width = fig_len, height = fig_len, data = mds)
-    report[[level]]$mds_map <- map_plt
+    report$mds_map <- map_plt
 
     # Remove data for all further plots, no need to duplicate it.
     map_plt$data <- NULL
@@ -54,13 +50,13 @@ reportMds <- function(experiment) {
               legend.position = "bottom",
               panel.background = element_blank())
       map_plt <- list(plt = map_obj, width = fig_len, height = fig_len)
-      report[[level]][[paste0("channel_", channel_filename)]] <- map_plt
+      report[[paste0("channel_", channel_filename)]] <- map_plt
     }
 
-    report[[level]]$shepard_plot <- .plotShepard(experiment, level, mds)
-  }
+    report$shepard_plot <- .plotShepard(experiment, level, mds)
 
-  report
+    report
+  })
 }
 
 .plotShepard <- function(experiment, level, mds) {

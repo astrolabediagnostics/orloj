@@ -9,8 +9,7 @@ sampleCellSubsetChannelStatistics(sample, level = "Assignment")
 \arguments{
 \item{sample}{An Astrolabe sample.}
 
-\item{level}{Cell subset level. Currently supported levels are "Assignment"
-and "Profiling".}
+\item{level}{Cell subset level, such as "Assignment" or "Profiling".}
 }
 \value{
 Cell subset channel intensity statistics for that level.

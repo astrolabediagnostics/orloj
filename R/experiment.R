@@ -87,18 +87,11 @@ experimentSummary <- function(experiment) {
 #' Cell subset counts and frequencies for all of the samples in an experiment.
 #'
 #' @param experiment An Astrolabe experiment.
-#' @param level Cell subset level. Currently supported levels are "Assignment"
-#' and "Profiling". The default is "Profiling" for Profiling Only experiments
-#' and "Assignment" otherwise.
+#' @param level Cell subset level, such as "Assignment" or "Profiling".
 #' @return Cell subset counts for that level.
 #' @export
 experimentCellSubsetCounts <- function(experiment,
                                        level = .chooseLevel(experiment)) {
-  if (!(level %in% c("Assignment", "Profiling"))) {
-    stop('level is not "Assignment" or "Profiling"')
-  }
-  if (level == "Profiling") level = "Profile"
-
   aggregate_statistics_filename <-
     file.path(experiment$analysis_path, "combine_aggregate_statistics.RDS")
   if (!file.exists(aggregate_statistics_filename)) {
@@ -107,9 +100,7 @@ experimentCellSubsetCounts <- function(experiment,
   aggregate_statistics <- readRDS(aggregate_statistics_filename)
 
   counts <- aggregate_statistics$subset_cell_counts
-  if (!(level %in% counts$Parent)) {
-    stop("level not found in cell subset counts")
-  }
+  if (!(level %in% counts$Parent)) stop("level not found in cell subset counts")
 
   counts <- counts %>%
     dplyr::filter(Parent == level) %>%
@@ -130,18 +121,11 @@ experimentCellSubsetCounts <- function(experiment,
 #' Cell subset channel statistics for all of the samples in an experiment.
 #'
 #' @param experiment An Astrolabe experiment.
-#' @param level Cell subset level. Currently supported levels are "Assignment"
-#' and "Profiling". The default is "Profiling" for Profiling Only experiments
-#' and "Assignment" otherwise.
+#' @param level Cell subset level, such as "Assignment" or "Profiling".
 #' @return Cell subset channel statistics for that level.
 #' @export
 experimentCellSubsetChannelStatistics <- function(experiment,
                                                   level = .chooseLevel(experiment)) {
-  if (!(level %in% c("Assignment", "Profiling"))) {
-    stop("level is not \"Assignment\" or \"Profiling\"")
-  }
-  if (level == "Profiling") level = "Profile"
-
   aggregate_statistics_filename <-
     file.path(experiment$analysis_path, "combine_aggregate_statistics.RDS")
   if (!file.exists(aggregate_statistics_filename)) {
@@ -169,39 +153,18 @@ experimentCellSubsetChannelStatistics <- function(experiment,
 #' columns in exported FCS files.
 #'
 #' @param experiment An Astrolabe experiment.
-#' @param level Cell subset level. Currently supported levels are "Assignment"
-#' and "Profiling". The default is "Profiling" for Profiling Only experiments
-#' and "Assignment" otherwise.
+#' @param level Cell subset level.
 #' @return Map from cell subsets to numerical values.
 #' @export
 experimentCellSubsetMap <- function(experiment,
                                     level = .chooseLevel(experiment)) {
-  if (level == "Profiling") level <- "Profile"
-
   # Get cell subsets from aggregate statistics.
-  aggregate_statistics_filename <-
-    file.path(experiment$analysis_path, "combine_aggregate_statistics.RDS")
-  if (!file.exists(aggregate_statistics_filename)) {
-    stop(paste0(aggregate_statistics_filename, " not found"))
-  }
-  aggregate_statistics <- readRDS(aggregate_statistics_filename)
-  stats <- aggregate_statistics$subset_channel_statistics
-  if (!(level %in% stats$Parent)) {
-    stop("level not found in cell subset channel statistics")
-  }
-  cell_subsets <- unique(stats$CellSubset[stats$Parent == level])
-
-  # If assignment level, complete the list with any subsets that could have
-  # occurred but did not.
-  if (level == "Assignment") {
-    cell_subsets <- union(cell_subsets, experimentAssignmentSubsets(experiment))
-  }
-  
-  cell_subsets <- gtools::mixedsort(cell_subsets)
-
-  # Add beads, debris, and dead cells.
+  cell_subsets_file_path <-
+    file.path(experiment$analysis_path, "experiment_cell_subsets.RDS")
+  cell_subsets <- readRDS(cell_subsets_file_path)
+  cell_subsets <- unique(cell_subsets[[level]])
   cell_subsets <- c(cell_subsets, "AstrolabeBead", "Debris", "Dead")
-
+  
   data.frame(
     Value = seq(length(cell_subsets)),
     CellSubset = cell_subsets,
@@ -215,18 +178,13 @@ experimentCellSubsetMap <- function(experiment,
 #' level.
 #'
 #' @param experiment An Astrolabe experiment.
-#' @param level Cell subset level. Currently supported levels are "Assignment"
-#' and "Profiling".
+#' @param level Cell subset level, such as "Assignment" or "Profiling".
 #' @param convert_ids Whether to convert Astrolabe IDs to feature names.
 #' @return Differential abundance analysis list.
 #' @export
 differentialAbundanceAnalysis <- function(experiment,
                                           level = .chooseLevel(experiment),
                                           convert_ids = TRUE) {
-  if (!(level %in% c("Assignment", "Profiling"))) {
-    stop("level is not \"Assignment\" or \"Profiling\"")
-  }
-
   # Value for NA feature value. Samples with this value should not be included
   # in the analysis.
   feature_na <- "__NA__"
@@ -240,9 +198,7 @@ differentialAbundanceAnalysis <- function(experiment,
 
   daa <- differential_abundance_analysis$differential_abundance_analysis
 
-  if (!(level %in% names(daa))) {
-    return(NULL)
-  }
+  if (!(level %in% names(daa))) return(NULL)
   daa <- daa[[level]]
 
   # Find feature values.
@@ -293,24 +249,19 @@ differentialAbundanceAnalysis <- function(experiment,
 #' Return the MDS map for the experiment, for a given level.
 #'
 #' @param experiment An Astrolabe experiment.
-#' @param level Cell subset level. Currently supported levels are "Assignment"
-#' and "Profiling".
+#' @param level Cell subset level, such as "Assignment" or "Profiling".
 #' @param convert_ids Whether to convert Astrolabe IDs to feature names.
 #' @return MDS map.
 #' @export
 experimentMds <- function(experiment,
                           level = .chooseLevel(experiment),
                           convert_ids = TRUE) {
-  if (!(level %in% c("Assignment", "Profiling"))) {
-    stop("level is not \"Assignment\" or \"Profiling\"")
-  }
-
   mds_filename <-
     file.path(experiment$analysis_path, "calculate_mds.RDS")
-  if (!file.exists(mds_filename)) {
-    stop(paste0(mds_filename, " not found"))
-  }
+  if (!file.exists(mds_filename)) stop(paste0(mds_filename, " not found"))
   mds <- readRDS(mds_filename)
+
+  if (!(level %in% names(mds))) stop("cannot find level in MDS map")
 
   mds <- mds[[level]]
 
@@ -374,24 +325,39 @@ experimentLabelingStrategy <- function(experiment) {
     )
   }) %>% dplyr::bind_rows()
 
-  # Order according to Level_1 order.
-  level_ones <- lapply(orloj::nameVector(assignment), function(cell_subset) {
-    curr_subset <- cell_subset
-    while (curr_subset != "Root") {
-      curr_subset <- gsub("_unassigned", "", curr_subset)
-      parent <- curr_subset
-      curr_subset <- hierarchy$Parent[hierarchy$CellSubset == curr_subset]
-    }
-    
-    data.frame(
-      Parent = parent,
-      CellSubset = cell_subset,
-      stringsAsFactors = FALSE
-    )
-  }) %>% dplyr::bind_rows()
-  level_ones <- level_ones[gtools::mixedorder(level_ones$Parent), ]
+  # Order according to Compartment order.
+  cell_subsets_file_path <-
+    file.path(experiment$analysis_path, "experiment_cell_subsets.RDS")
+  if (file.exists(cell_subsets_file_path)) {
+    # Experiment has Compartment level.
+    cell_subsets <- readRDS(cell_subsets_file_path)
+    cell_subsets <- unique(cell_subsets[, c("Compartment", "Assignment")])
+    cell_subsets <-
+      cell_subsets %>%
+      dplyr::filter(Assignment %in% descs$CellSubset) %>%
+      dplyr::rename(Parent = Compartment, CellSubset = Assignment)
+  } else {
+    # Reverse compatibility: Experiment does not have Compartment level, use
+    # Level_1 instead.
+    cell_subsets <-
+      lapply(orloj::nameVector(assignment), function(cell_subset) {
+        curr_subset <- cell_subset
+        while (curr_subset != "Root") {
+          curr_subset <- gsub("_unassigned", "", curr_subset)
+          parent <- curr_subset
+          curr_subset <- hierarchy$Parent[hierarchy$CellSubset == curr_subset]
+        }
+        
+        data.frame(
+          Parent = parent,
+          CellSubset = cell_subset,
+          stringsAsFactors = FALSE
+        )
+      }) %>% dplyr::bind_rows()
+    cell_subsets <- cell_subsets[gtools::mixedorder(cell_subsets$Parent), ]
+  }
 
-  dplyr::left_join(level_ones, descs, by = "CellSubset")
+  dplyr::left_join(cell_subsets, descs, by = "CellSubset")
 }
 
 .getSubsetChannels <- function(hierarchy, class_channels, cell_subset) {
@@ -441,17 +407,27 @@ experimentLabelingStrategy <- function(experiment) {
 #' @export
 experimentAssignmentSubsets <- function(experiment) {
   if (experiment$organism == "profiling_only") return(NULL)
-  
-  subsets <- experimentLabelingStrategy(experiment)$CellSubset
-  
-  if (!is.null(experiment$extend_assignment_unassigned) &&
-      experiment$extend_assignment_unassigned) {
-    hierarchy <-
-      readRDS(file.path(experiment$analysis_path, "hierarchy.RDS"))$hierarchy
-    
-    subsets <- c(subsets, paste0(unique(hierarchy$Parent), "_unassigned"))
-  }
-  
-  gtools::mixedsort(subsets)
-}
 
+  cell_subsets_file_path <-
+    file.path(experiment$analysis_path, "experiment_cell_subsets.RDS")
+  if (file.exists(cell_subsets_file_path)) {
+    # Experiment has Compartment level.
+    cell_subsets <- readRDS(cell_subsets_file_path)
+    unique(cell_subsets$Assignment)
+  } else {
+    # Reverse compatibility: Experiment does not have Compartment level, need
+    # to check for extend_assignment_unassigned.
+    subsets <- experimentLabelingStrategy(experiment)$CellSubset
+    
+    if (!is.null(experiment$extend_assignment_unassigned) &&
+        experiment$extend_assignment_unassigned) {
+      hierarchy <-
+        readRDS(file.path(experiment$analysis_path, "hierarchy.RDS"))$hierarchy
+      
+      subsets <- c(subsets, paste0(unique(hierarchy$Parent), "_unassigned"))
+      subsets <- gtools::mixedsort(unique(subsets))
+    }
+
+    subsets
+  }
+}
