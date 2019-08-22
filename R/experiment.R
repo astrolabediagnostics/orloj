@@ -277,7 +277,7 @@ experimentMds <- function(experiment,
     experimentCellSubsetChannelStatistics(experiment, level = level)
   marker_stats <- marker_stats %>%
     dplyr::group_by(CellSubset, ChannelName) %>%
-    dplyr::summarize(Median = mean(Median)) %>%
+    dplyr::summarize(Median = mean(Median, na.rm = TRUE)) %>%
     reshape2::dcast(CellSubset ~ ChannelName, value.var = "Median")
   mds <- dplyr::left_join(mds, marker_stats, by = "CellSubset")
 
