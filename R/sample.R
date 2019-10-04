@@ -122,19 +122,19 @@ fcsExprs <- function(sample,
                      keep_debris = FALSE,
                      keep_dead = FALSE) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
-
+  
   exprs <- sample$exprs
-
+  
   exprs$AstrolabeBead <- FALSE
   exprs$Dead          <- FALSE
   exprs$Debris        <- FALSE
-
+  
   # Mark beads.
   if (!is.null(sample$non_bead_indices)) {
     exprs$AstrolabeBead <- TRUE
     exprs$AstrolabeBead[sample$non_bead_indices] <- FALSE
   }
-
+  
   # Mark debris and doublets.
   if (!is.null(sample$debris_indices)) {
     exprs$Debris[sample$non_bead_indices[sample$debris_indices]] <- TRUE
@@ -142,14 +142,14 @@ fcsExprs <- function(sample,
   if (!is.null(sample$doublet_indices)) {
     exprs$Debris[sample$non_bead_indices[sample$doublet_indices]] <- TRUE
   }
-
+  
   # Mark dead.
   if (!is.null(sample$live_indices)) {
     exprs$Dead <- NA
     exprs$Dead[sample$non_bead_indices] <- TRUE
     exprs$Dead[sample$non_bead_indices[sample$live_indices]] <- FALSE
   }
-
+  
   # Incorporate cell assignments.
   if (!is.null(sample$cell_assignments)) {
     cell_assignments <- sample$cell_assignments$cell_assignments
@@ -183,12 +183,12 @@ fcsExprs <- function(sample,
       }
     }
     exprs$Debris[exprs$Assignment %in% debris_labels] <- TRUE
-
+    
     # Update Assignment to AstrolabeBead/Debris/Dead values.
     exprs$Assignment[exprs$AstrolabeBead] <- "AstrolabeBead"
     exprs$Assignment[exprs$Debris] <- "Debris"
     exprs$Assignment[exprs$Dead] <- "Dead"
-
+    
     # Incorporate profiling.
     if (!is.null(sample$subset_profiling_assignment)) {
       profiling <- sample$subset_profiling_assignment$Profile
@@ -209,9 +209,10 @@ fcsExprs <- function(sample,
       exprs$Profiling[profiling_indices] <- profiling
     }
   }
-
+  
   # Incorporate Compartment.
-  if (!is.null(sample$cell_subsets)) {
+  if (!is.null(sample$cell_subsets) &&
+      "Assignment" %in% colnames(sample$cell_subsets)) {
     ass_to_compartment_map <-
       unique(sample$cell_subsets[, c("Assignment", "Compartment")])
     exprs <- dplyr::left_join(exprs, ass_to_compartment_map, by = "Assignment")
@@ -219,17 +220,17 @@ fcsExprs <- function(sample,
     removed_indices <- which(exprs$Assignment %in% debris_labels)
     exprs$Compartment[removed_indices] <- exprs$Assignment[removed_indices]
   }
-
+  
   if (nrow(exprs) != nrow(sample$exprs)) {
     # Make sure that we did not mess up the number of rows on exprs.
     stop("expression size changed from original")
   }
-
+  
   # Remove any unnecessary events.
   if (!keep_beads) exprs <- exprs[!exprs$AstrolabeBead, ]
   if (!keep_debris) exprs <- exprs[!exprs$Debris, ]
   if (!keep_dead) exprs <- exprs[!exprs$Dead, ]
-
+  
   exprs
 }
 
@@ -244,11 +245,11 @@ fcsExprs <- function(sample,
 #' @export
 sampleCellSubsetCounts <- function(sample, level = "Assignment") {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
-
+  
   if (!level %in% sample$aggregate_statistics$subset_cell_counts) {
     stop("sample does not have this level")
   }
-
+  
   subset(sample$aggregate_statistics$subset_cell_counts,
          Parent == level, select = c("CellSubset", "N"))
 }
