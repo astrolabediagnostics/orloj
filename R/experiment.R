@@ -12,11 +12,11 @@
 #' @export
 loadExperiment <- function(experiment_path) {
   experiment <- readRDS(file.path(experiment_path, "config.RDS"))
-
+  
   experiment$analysis_path <- file.path(experiment_path, "analysis")
   experiment$reports_path <- file.path(experiment_path, "reports")
   experiment$samples_path <- file.path(experiment_path, "samples")
-
+  
   experiment
 }
 
@@ -31,15 +31,15 @@ loadExperiment <- function(experiment_path) {
 getExperimentSampleFeatures <- function(experiment) {
   sample_features <- experiment$sample_features
   features <- experiment$features
-
+  
   # Experiment has no features, return just column with sample IDs.
   if (ncol(features) == 0) return(experiment$samples[, "SampleId"])
-
+  
   features$FeatureId <- paste0("feature_", features$FeatureId)
   m <- match(colnames(sample_features), features$FeatureId)
   col_indices <- !is.na(m)
   colnames(sample_features)[col_indices] <- features$FeatureName[m[col_indices]]
-
+  
   sample_features
 }
 
@@ -98,21 +98,21 @@ experimentCellSubsetCounts <- function(experiment,
     stop(paste0(aggregate_statistics_filename, "not found"))
   }
   aggregate_statistics <- readRDS(aggregate_statistics_filename)
-
+  
   counts <- aggregate_statistics$subset_cell_counts
   if (!(level %in% counts$Parent)) stop("level not found in cell subset counts")
-
+  
   counts <- counts %>%
     dplyr::filter(Parent == level) %>%
     dplyr::select(-Parent)
   counts <- dplyr::left_join(experiment$samples, counts, by = "SampleId")
-
+  
   # Calculate frequencies.
   counts <- counts %>%
     dplyr::group_by(SampleId) %>%
     dplyr::mutate(Freq = N / sum(N)) %>%
     dplyr::ungroup()
-
+  
   counts
 }
 
@@ -132,17 +132,17 @@ experimentCellSubsetChannelStatistics <- function(experiment,
     stop(paste0(aggregate_statistics_filename, "not found"))
   }
   aggregate_statistics <- readRDS(aggregate_statistics_filename)
-
+  
   stats <- aggregate_statistics$subset_channel_statistics
   if (!(level %in% stats$Parent)) {
     stop("level not found in cell subset channel statistics")
   }
-
+  
   stats <- stats %>%
     dplyr::filter(Parent == level) %>%
     dplyr::select(-Parent)
   stats <- dplyr::left_join(experiment$samples, stats, by = "SampleId")
-
+  
   stats
 }
 
@@ -188,19 +188,19 @@ differentialAbundanceAnalysis <- function(experiment,
   # Value for NA feature value. Samples with this value should not be included
   # in the analysis.
   feature_na <- "__NA__"
-
+  
   daa_filename <-
     file.path(experiment$analysis_path, "differential_abundance_analysis.RDS")
   if (!file.exists(daa_filename)) {
     stop(paste0(daa_filename, " not found"))
   }
   differential_abundance_analysis <- readRDS(daa_filename)
-
+  
   daa <- differential_abundance_analysis$differential_abundance_analysis
-
+  
   if (!(level %in% names(daa))) return(NULL)
   daa <- daa[[level]]
-
+  
   # Find feature values.
   feature_values <- lapply(nameVector(names(daa)), function(feature_name) {
     values <- unique(experiment$sample_features[[feature_name]])
@@ -215,7 +215,7 @@ differentialAbundanceAnalysis <- function(experiment,
     names(daa) <- experiment$features$FeatureName[m]
     names(feature_values) <- experiment$features$FeatureName[m]
   }
-
+  
   # Convert tables to tibbles and only keep p-value, FDR, and logFC.
   lapply(nameVector(names(daa)), function(feature_name) {
     if (is.null(daa[[feature_name]])) {
@@ -223,7 +223,7 @@ differentialAbundanceAnalysis <- function(experiment,
     } else {
       tab <- as.data.frame(daa[[feature_name]]) %>%
         tibble::rownames_to_column("CellSubset")
-
+      
       # Calculate max(logFC) for features with multiple values.
       log_fc_cols <- grep("logFC", colnames(tab))
       if (length(log_fc_cols) > 1) {
@@ -231,7 +231,7 @@ differentialAbundanceAnalysis <- function(experiment,
         max_log_fc <- apply(log_fc, 1, function(v) v[which.max(abs(v))])
         tab$logFC <- max_log_fc
       }
-
+      
       cols <-
         c("CellSubset",
           "logFC",
@@ -241,6 +241,34 @@ differentialAbundanceAnalysis <- function(experiment,
       
       tab[, cols]
     }
+  })
+}
+
+#' Differential expression analysis.
+#'
+#' Load the experiment differential expression analysis across all levels and
+#' all kits.
+#'
+#' @param experiment An Astrolabe experiment.
+#' @param convert_ids Whether to convert Astrolabe IDs to user-supplied values.
+#' @return Differential expression analysis list.
+#' @export
+experimentDifferentialExpressionAnalysis <- function(experiment,
+                                                     convert_ids = TRUE) {
+  # Import differential expression analysis data.
+  dea <-
+    readRDS(file.path(
+      experiment$analysis_path,
+      "differential_abundance_analysis.RDS"))$differential_expression_analysis
+
+  if (is.null(dea)) return(dea)
+  if (!convert_ids) return(dea)
+  
+  # Convert kit IDs to user-supplied values.
+  lapply(dea, function(dea_level) {
+    m <- match(names(dea_level), experiment$de_analysis_kits$Id)
+    names(dea_level) <- experiment$de_analysis_kits$Name[m]
+    dea_level
   })
 }
 
@@ -260,18 +288,18 @@ experimentMds <- function(experiment,
     file.path(experiment$analysis_path, "calculate_mds.RDS")
   if (!file.exists(mds_filename)) stop(paste0(mds_filename, " not found"))
   mds <- readRDS(mds_filename)
-
+  
   if (!(level %in% names(mds))) stop("cannot find level in MDS map")
-
+  
   mds <- mds[[level]]
-
+  
   # Calculate and add mean frequency over all samples.
   cell_subset_counts <- experimentCellSubsetCounts(experiment, level = level)
   mds_freqs <- cell_subset_counts %>%
     dplyr::group_by(CellSubset) %>%
     dplyr::summarize(Freq = mean(Freq))
   mds <- dplyr::left_join(mds, mds_freqs, by = "CellSubset")
-
+  
   # Calculate and add mean marker intensities over all samples.
   marker_stats <-
     experimentCellSubsetChannelStatistics(experiment, level = level)
@@ -280,13 +308,13 @@ experimentMds <- function(experiment,
     dplyr::summarize(Median = mean(Median, na.rm = TRUE)) %>%
     reshape2::dcast(CellSubset ~ ChannelName, value.var = "Median")
   mds <- dplyr::left_join(mds, marker_stats, by = "CellSubset")
-
+  
   # Add max(fold change) and -log10(FDR) for each feature.
   daa <- differentialAbundanceAnalysis(experiment, level = level, convert_ids)
   for (feature_name in names(daa)) {
     # Skip features for which we did not run DAA.
     if (is.null(daa[[feature_name]])) next
-
+    
     tab <- daa[[feature_name]]
     tab <- tab[, c("CellSubset", "logFC", "FDR")]
     colnames(tab) <-
@@ -295,7 +323,7 @@ experimentMds <- function(experiment,
         paste0(feature_name, "_FDR"))
     mds <- dplyr::left_join(mds, tab, by = "CellSubset")
   }
-
+  
   mds
 }
 
@@ -312,7 +340,7 @@ experimentLabelingStrategy <- function(experiment) {
   
   hierarchy <-
     readRDS(file.path(experiment$analysis_path, "hierarchy.RDS"))$hierarchy
-
+  
   # Convert Assignment cell subsets to strings.
   assignment <- setdiff(hierarchy$CellSubset, hierarchy$Parent)
   descs <- lapply(orloj::nameVector(assignment), function(cell_subset) {
@@ -324,7 +352,7 @@ experimentLabelingStrategy <- function(experiment) {
       stringsAsFactors = FALSE
     )
   }) %>% dplyr::bind_rows()
-
+  
   # Order according to Compartment order.
   cell_subsets_file_path <-
     file.path(experiment$analysis_path, "experiment_cell_subsets.RDS")
@@ -356,7 +384,7 @@ experimentLabelingStrategy <- function(experiment) {
       }) %>% dplyr::bind_rows()
     cell_subsets <- cell_subsets[gtools::mixedorder(cell_subsets$Parent), ]
   }
-
+  
   dplyr::left_join(cell_subsets, descs, by = "CellSubset")
 }
 
@@ -407,7 +435,7 @@ experimentLabelingStrategy <- function(experiment) {
 #' @export
 experimentAssignmentSubsets <- function(experiment) {
   if (experiment$organism == "profiling_only") return(NULL)
-
+  
   cell_subsets_file_path <-
     file.path(experiment$analysis_path, "experiment_cell_subsets.RDS")
   if (file.exists(cell_subsets_file_path)) {
@@ -427,7 +455,7 @@ experimentAssignmentSubsets <- function(experiment) {
       subsets <- c(subsets, paste0(unique(hierarchy$Parent), "_unassigned"))
       subsets <- gtools::mixedsort(unique(subsets))
     }
-
+    
     subsets
   }
 }
