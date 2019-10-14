@@ -110,28 +110,16 @@ findStandardMassCytometryChannels <- function(sample) {
   dna191_idx <- which(sample$parameter_name == "Ir191Di")
   dna193_idx <- which(sample$parameter_name == "Ir193Di")
 
-  livedead_idx <- which(sample$parameter_name == "Pt195Di")
-  if (length(livedead_idx) > 0) {
-    livedead_desc <- sample$parameter_desc[livedead_idx]
-    if (!grepl("dead|alive|viability|cisplatin",
-               livedead_desc, ignore.case = TRUE)) {
-      # Disregard if the description does not hint at viability.
-      livedead_idx <- c()
-    }
-  }
-
   # Set missing values to NULL.
   if (length(time_idx) == 0)          time_idx <- NULL
   if (length(event_length_idx) == 0)  event_length_idx <- NULL
   if (length(dna191_idx) == 0)        dna191_idx <- NULL
   if (length(dna193_idx) == 0)        dna193_idx <- NULL
-  if (length(livedead_idx) == 0)      livedead_idx <- NULL
 
   list(
     time_idx = time_idx,
     event_length_idx = event_length_idx,
     dna191_idx = dna191_idx,
-    dna193_idx = dna193_idx,
-    livedead_idx = livedead_idx
+    dna193_idx = dna193_idx
   )
 }

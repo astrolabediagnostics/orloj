@@ -78,27 +78,33 @@ reportNonCells <- function(sample) {
   width <- length(unique(exprs_clean$EventType)) * fig_len
     
   report$CellLabelingDebris <- list(plt = plt, width = width, height = fig_len)
-  
-  if (any(exprs$Dead)) {
+
+  if (length(sample$live_dead_channel_name) > 0) {
     # Generate live/dead report.
-    livedead_exprs <- subset(exprs, !Debris)
-    livedead_exprs$EventType <- "Alive"
-    livedead_exprs$EventType[livedead_exprs$Dead] <- "Dead"
-    livedead_exprs$EventType <-
-      factor(livedead_exprs$EventType, levels = c("Alive", "Dead"))
-  
+    live_dead_exprs <- subset(exprs, !Debris)
+    live_dead_exprs$EventType <- "Alive"
+    live_dead_exprs$EventType[live_dead_exprs$Dead] <- "Dead"
+    live_dead_exprs$EventType <-
+      factor(live_dead_exprs$EventType, levels = c("Alive", "Dead"))
+
     # Figure: DNA versus cisplatin.
-    livedead_idx <- standard_channels$livedead_idx
-    livedead_lim <- c(0, ceiling(max(exprs[[livedead_idx]]) * 0.25) / 0.25)
-    n_alive <- sum(!livedead_exprs$Dead)
-    per_alive <- mean(!livedead_exprs$Dead)
+    x_channel_idx <-
+      which(sample$parameter_name == sample$live_dead_x_channel_name)
+    live_dead_channel_idx <-
+      which(sample$parameter_name == sample$live_dead_channel_name)
+
+    x_lim <- c(0, ceiling(max(exprs[[x_channel_idx]]) * 0.25) / 0.25)
+    live_dead_lim <-
+      c(0, ceiling(max(exprs[[live_dead_channel_idx]]) * 0.25) / 0.25)
+    n_alive <- sum(!live_dead_exprs$Dead)
+    per_alive <- mean(!live_dead_exprs$Dead)
     df <- data.frame(
-      EventType = livedead_exprs$EventType,
-      DNA = livedead_exprs[[standard_channels$dna191_idx]],
-      LiveDead = livedead_exprs[[livedead_idx]]
+      EventType = live_dead_exprs$EventType,
+      X = live_dead_exprs[[x_channel_idx]],
+      LiveDead = live_dead_exprs[[live_dead_channel_idx]]
     )
     plt <-
-      ggplot(mapping = aes(x = DNA, y = LiveDead)) +
+      ggplot(mapping = aes(x = X, y = LiveDead)) +
       geom_point(data = df, alpha = 0.1, color = "grey70", size = 0) +
       geom_point(data = df[df$EventType == "Alive", ],
                  alpha = 0.5, color = "#1C3C44", size = 1) +
@@ -106,7 +112,8 @@ reportNonCells <- function(sample) {
       labs(title =
              paste0(prettyNum(n_alive, big.mark = ","), " (",
                     round(per_alive * 100, 1), "%) live events"),
-           y = "Live/Dead") +
+           x = sample$live_dead_x_channel_name,
+           y = sample$live_dead_channel_name) +
       theme_linedraw() +
       theme(aspect.ratio = 1)
     report$LiveDead <- list(plt = plt, width = fig_len, height = fig_len)
