@@ -201,6 +201,8 @@ identifyFcsInstrument <- function(flow_frame) {
     return("mass_cytometry")
   } else if (grepl("aurora", cyt)) {
     return("aurora")
+  } else if (grepl("lsrfortessa", cyt)) {
+    return("lsr_fortessa")
   } else {
     return("unknown")
   }
@@ -233,10 +235,6 @@ convertFlowFrame <- function(experiment, filename, flow_frame) {
   if (any(channels$Desc == "")) stop("desc cannot be empty")
   if (any(duplicated(channels$Desc))) stop("desc cannot have duplicates")
 
-  # Apply compensation if necessary.
-  spill <- flowCore::keyword(flow_frame)$`SPILL`
-  if (is.matrix(spill)) flow_frame <- flowCore::compensate(flow_frame, spill)
-
   desc <- channels$Desc
   name <- channels$Name
   exprs <- tibble::as_tibble(flow_frame@exprs)
@@ -260,7 +258,7 @@ preprocess <- function(experiment, sample) {
 
   if (experiment$instrument == "mass_cytometry") {
     massPreprocess(sample)
-  } else if (experiment$instrument == "aurora") {
+  } else if (experiment$instrument %in% c("aurora", "lsr_fortessa")) {
     auroraPreprocess(sample)
   } else if (experiment$instrument == "citeseq") {
     citeseqPreprocess(sample)

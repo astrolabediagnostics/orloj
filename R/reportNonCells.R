@@ -10,15 +10,32 @@ reportNonCells <- function(sample) {
 
   # Figure dimensions.
   fig_len <- 400
+  
+  # Instrument-specific report.
+  if (sample$instrument == "mass_cytometry") {
+    report <- .reportMassCytometryDebrisDoublets(sample, fig_len = fig_len)
+  } else if (sample$instrument %in% c("aurora", "lsr_fortessa")) {
+    report <- .reportFlowCytometryDebrisDoublets(sample, fig_len = fig_len)
+  } else return(NULL)
+  
+  if (is.null(report)) return(report)
 
-  exprs <- fcsExprs(sample, keep_debris = TRUE, keep_dead = TRUE)
+  # Live/Dead plot.
+  report$LiveDead <- .plotLiveDead(sample, fig_len = fig_len)
+    
+  report
+}
 
+.reportMassCytometryDebrisDoublets <- function(sample, fig_len = 400) {
+  # Generate debris and doublet report for mass cytometry data.
+  
   # Set standard naming for Event Length and DNA columns.
+  exprs <- fcsExprs(sample, keep_debris = TRUE, keep_dead = TRUE)
   standard_channels <- findStandardMassCytometryChannels(sample)
   event_length_idx <- standard_channels$event_length_idx
   dna191_idx <- standard_channels$dna191_idx
   # Don't return a report if DNA or event length are missing.
-  if (is.null(dna191_idx) || is.null(event_length_idx)) return(c())
+  if (is.null(dna191_idx) || is.null(event_length_idx)) return(NULL)
   colnames(exprs)[event_length_idx] <- "Event Length"
   colnames(exprs)[dna191_idx] <- "DNA"
 
@@ -49,7 +66,6 @@ reportNonCells <- function(sample) {
     
   report$PreprocessingDebris <- list(plt = plt, width = width, height = fig_len)
 
-
   # Generate Ek'balam debris and Root_unassigned figure.
   exprs_clean <-
     exprs[setdiff(seq(nrow(exprs)),
@@ -78,46 +94,98 @@ reportNonCells <- function(sample) {
   width <- length(unique(exprs_clean$EventType)) * fig_len
     
   report$CellLabelingDebris <- list(plt = plt, width = width, height = fig_len)
-
-  if (length(sample$live_dead_channel_name) > 0) {
-    # Generate live/dead report.
-    live_dead_exprs <- subset(exprs, !Debris)
-    live_dead_exprs$EventType <- "Alive"
-    live_dead_exprs$EventType[live_dead_exprs$Dead] <- "Dead"
-    live_dead_exprs$EventType <-
-      factor(live_dead_exprs$EventType, levels = c("Alive", "Dead"))
-
-    # Figure: DNA versus cisplatin.
-    x_channel_idx <-
-      which(sample$parameter_name == sample$live_dead_x_channel_name)
-    live_dead_channel_idx <-
-      which(sample$parameter_name == sample$live_dead_channel_name)
-
-    x_lim <- c(0, ceiling(max(exprs[[x_channel_idx]]) * 0.25) / 0.25)
-    live_dead_lim <-
-      c(0, ceiling(max(exprs[[live_dead_channel_idx]]) * 0.25) / 0.25)
-    n_alive <- sum(!live_dead_exprs$Dead)
-    per_alive <- mean(!live_dead_exprs$Dead)
-    df <- data.frame(
-      EventType = live_dead_exprs$EventType,
-      X = live_dead_exprs[[x_channel_idx]],
-      LiveDead = live_dead_exprs[[live_dead_channel_idx]]
-    )
-    plt <-
-      ggplot(mapping = aes(x = X, y = LiveDead)) +
-      geom_point(data = df, alpha = 0.1, color = "grey70", size = 0) +
-      geom_point(data = df[df$EventType == "Alive", ],
-                 alpha = 0.5, color = "#1C3C44", size = 1) +
-      geom_density2d(data = df, color = "grey20") +
-      labs(title =
-             paste0(prettyNum(n_alive, big.mark = ","), " (",
-                    round(per_alive * 100, 1), "%) live events"),
-           x = sample$live_dead_x_channel_name,
-           y = sample$live_dead_channel_name) +
-      theme_linedraw() +
-      theme(aspect.ratio = 1)
-    report$LiveDead <- list(plt = plt, width = fig_len, height = fig_len)
-  }
-    
+ 
   report
+}
+
+.reportFlowCytometryDebrisDoublets <- function(sample, fig_len = 400) {
+  # Generate debris and doublet report for flow cytometry data.
+  exprs <- fcsExprs(sample, keep_debris = TRUE, keep_dead = TRUE)
+  
+  # Collect the FSC/SSC channels used for cleaning.
+  fsc_a <- grep("FSC_A", sample$parameter_desc, fixed = TRUE, value = TRUE)
+  fsc_h <- grep("FSC_H", sample$parameter_desc, fixed = TRUE, value = TRUE)
+  ssc_a <- grep("SSC_A", sample$parameter_desc, fixed = TRUE, value = TRUE)
+  if (length(fsc_a) != 1 || length(fsc_h) != 1 || length(ssc_a) != 1) {
+    return(NULL)
+  }
+  exprs$FSC_A <- exprs[[fsc_a]]
+  exprs$FSC_H <- exprs[[fsc_h]]
+  exprs$SSC_A <- exprs[[ssc_a]]
+  
+  # Populate with debris and doublets from cleaning step.
+  exprs$Debris <- FALSE
+  exprs$Debris[sample$debris_indices] <- TRUE
+  exprs$Doublet <- FALSE
+  exprs$Doublet[sample$doublet_indices] <- TRUE
+
+  # Figure: Debris, FSC_A versus SSC_A.
+  fig_title <- 
+    paste0(prettyNum(sum(exprs$Debris), big.mark = ","), " (",
+           round(mean(exprs$Debris) * 100, 1), "%) debris events")
+  plt_debris <- 
+    ggplot(mapping = aes(x = FSC_A, y = SSC_A)) +
+    geom_point(data = exprs, alpha = 0.1, color = "grey70", size = 0) +
+    geom_point(data = subset(exprs, Debris),
+               alpha = 0.5, color = "#1C3C44", size = 0) +
+    geom_density2d(data = exprs, color = "grey20") +
+    labs(title = fig_title) +
+    theme_linedraw() +
+    theme(aspect.ratio = 1)
+  
+  # Figure: Doublets, FSC_A versus FSC_H.
+  fig_title <- 
+    paste0(prettyNum(sum(exprs$Doublet), big.mark = ","), " (",
+           round(mean(exprs$Doublet) * 100, 1), "%) doublet events")
+  plt_doublets <- 
+    ggplot(mapping = aes(x = FSC_A, y = FSC_H)) +
+    geom_point(data = subset(exprs, !Debris),
+               alpha = 0.1, color = "grey70", size = 0) +
+    geom_point(data = subset(exprs, !Debris & Doublet),
+               alpha = 0.5, color = "#1C3C44", size = 0) +
+    geom_density2d(data = exprs, color = "grey20") +
+    labs(title = fig_title) +
+    theme_linedraw() +
+    theme(aspect.ratio = 1)
+  
+  list(
+    PreprocessingDebris =
+      list(plt = plt_debris + plt_doublets,
+           width = fig_len * 2, height = fig_len)
+  )
+}
+
+.plotLiveDead <- function(sample, fig_len = 400) {
+  # Plot instrument-specific X axis marker versus Live/Dead.
+  if (length(sample$live_dead_channel_name) == 0) return(NULL)
+  
+  # Reorganize data into a single data frame with generic column names.
+  x_channel_idx <-
+    which(sample$parameter_name == sample$live_dead_x_channel_name)
+  live_dead_channel_idx <-
+    which(sample$parameter_name == sample$live_dead_channel_name)
+  exprs <- fcsExprs(sample, keep_dead = TRUE)
+  df <- data.frame(
+    EventType =
+      factor(ifelse(exprs$Dead, "Dead", "Alive"), levels = c("Alive", "Dead")),
+    X = exprs[[x_channel_idx]],
+    LiveDead = exprs[[live_dead_channel_idx]]
+  )
+  
+  # Figure: Instrument-specific X versus Live/Dead.
+  fig_title <- 
+    paste0(prettyNum(sum(!exprs$Dead), big.mark = ","), " (",
+           round(mean(!exprs$Dead) * 100, 1), "%) live events")
+  plt <-
+    ggplot(mapping = aes(x = X, y = LiveDead)) +
+    geom_point(data = df, alpha = 0.1, color = "grey70", size = 0) +
+    geom_point(data = subset(df, EventType == "Alive"),
+               alpha = 0.5, color = "#1C3C44", size = 1) +
+    geom_density2d(data = df, color = "grey20") +
+    labs(title = fig_title,
+         x = sample$live_dead_x_channel_name,
+         y = sample$live_dead_channel_name) +
+    theme_linedraw() +
+    theme(aspect.ratio = 1)
+  list(plt = plt, width = fig_len, height = fig_len)
 }

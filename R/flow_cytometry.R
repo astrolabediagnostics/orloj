@@ -19,7 +19,8 @@ auroraTransformChannels <- function(flow_frame) {
   # Calculate and apply expectedLogicle. The prefix ^ is required due to an
   # issue with flowCore's regular expression.
   el <-
-    flowCore::estimateLogicle(flow_frame, channels = paste0("^", transform_cols))
+    flowCore::estimateLogicle(flow_frame,
+                              channels = paste0("^", transform_cols))
   flow_frame <- flowCore::transform(flow_frame, el)
 
   list(
