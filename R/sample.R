@@ -212,7 +212,8 @@ fcsExprs <- function(sample,
   
   # Incorporate Compartment.
   if (!is.null(sample$cell_subsets) &&
-      "Assignment" %in% colnames(sample$cell_subsets)) {
+      "Assignment" %in% colnames(sample$cell_subsets) &&
+      "Assignment" %in% colnames(exprs)) {
     ass_to_compartment_map <-
       unique(sample$cell_subsets[, c("Assignment", "Compartment")])
     exprs <- dplyr::left_join(exprs, ass_to_compartment_map, by = "Assignment")
