@@ -10,6 +10,9 @@ reportNonCells <- function(sample) {
 
   # Figure dimensions.
   fig_len <- 400
+
+  if (length(sample$debris_indices) == 0 &&
+        length(sample$doublet_indices) == 0) return(NULL)
   
   # Instrument-specific report.
   if (sample$instrument == "mass_cytometry") {
