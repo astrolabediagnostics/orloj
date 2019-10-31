@@ -217,9 +217,12 @@ fcsExprs <- function(sample,
     ass_to_compartment_map <-
       unique(sample$cell_subsets[, c("Assignment", "Compartment")])
     exprs <- dplyr::left_join(exprs, ass_to_compartment_map, by = "Assignment")
+    # Update beads, debris, and dead with correct values for Compartment.
+    exprs$Compartment[exprs$AstrolabeBead] <- "AstrolabeBead"
+    exprs$Compartment[exprs$Debris] <- "Debris"
+    exprs$Compartment[exprs$Dead] <- "Dead"
+    # Everything else is "other".
     exprs$Compartment[is.na(exprs$Compartment)] <- "Other"
-    removed_indices <- which(exprs$Assignment %in% debris_labels)
-    exprs$Compartment[removed_indices] <- exprs$Assignment[removed_indices]
   }
   
   if (nrow(exprs) != nrow(sample$exprs)) {
