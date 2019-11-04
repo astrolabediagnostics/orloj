@@ -3,9 +3,10 @@
 #' Generate plots for debris, doublets, and live/dead events.
 #'
 #' @param sample An Astrolabe sample.
+#' @param max_n Subsample the data to a maximum of max_n cells.
 #' @return An orloj report list with all of the required objects.
 #' @export
-reportNonCells <- function(sample) {
+reportNonCells <- function(sample, max_n = Inf) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   # Figure dimensions.
@@ -16,20 +17,25 @@ reportNonCells <- function(sample) {
   
   # Instrument-specific report.
   if (sample$instrument == "mass_cytometry") {
-    report <- .reportMassCytometryDebrisDoublets(sample, fig_len = fig_len)
+    report <-
+      .reportMassCytometryDebrisDoublets(sample, fig_len = fig_len,
+                                         max_n = max_n)
   } else if (sample$instrument %in% c("aurora", "lsr_fortessa")) {
-    report <- .reportFlowCytometryDebrisDoublets(sample, fig_len = fig_len)
+    report <-
+      .reportFlowCytometryDebrisDoublets(sample, fig_len = fig_len,
+                                         max_n = max_n)
   } else return(NULL)
   
   if (is.null(report)) return(report)
 
   # Live/Dead plot.
-  report$LiveDead <- .plotLiveDead(sample, fig_len = fig_len)
+  report$LiveDead <- .plotLiveDead(sample, fig_len = fig_len, max_n = max_n)
     
   report
 }
 
-.reportMassCytometryDebrisDoublets <- function(sample, fig_len = 400) {
+.reportMassCytometryDebrisDoublets <- function(sample, fig_len = 400,
+                                               max_n = Inf) {
   # Generate debris and doublet report for mass cytometry data.
   
   # Set standard naming for Event Length and DNA columns.
@@ -55,6 +61,8 @@ reportNonCells <- function(sample) {
   exprs$EventType[sample$doublet_indices] <- "Doublet"
   exprs$EventType <-
     factor(exprs$EventType, levels = c("Cell", "Debris", "Doublet"))
+
+  if (nrow(exprs) > max_n) exprs <- exprs[sample(seq(nrow(exprs)), max_n), ]
 
   # Figure: Event Length versus DNA.
   plt <- 
@@ -101,7 +109,8 @@ reportNonCells <- function(sample) {
   report
 }
 
-.reportFlowCytometryDebrisDoublets <- function(sample, fig_len = 400) {
+.reportFlowCytometryDebrisDoublets <- function(sample, fig_len = 400,
+                                               max_n = max_n) {
   # Generate debris and doublet report for flow cytometry data.
   exprs <- fcsExprs(sample, keep_debris = TRUE, keep_dead = TRUE)
   
@@ -121,6 +130,8 @@ reportNonCells <- function(sample) {
   exprs$Debris[sample$debris_indices] <- TRUE
   exprs$Doublet <- FALSE
   exprs$Doublet[sample$doublet_indices] <- TRUE
+
+  if (nrow(exprs) > max_n) exprs <- exprs[sample(seq(nrow(exprs)), max_n), ]
 
   # Figure: Debris, FSC_A versus SSC_A.
   fig_title <- 
@@ -158,7 +169,7 @@ reportNonCells <- function(sample) {
   )
 }
 
-.plotLiveDead <- function(sample, fig_len = 400) {
+.plotLiveDead <- function(sample, fig_len = 400, max_n = Inf) {
   # Plot instrument-specific X axis marker versus Live/Dead.
   if (length(sample$live_dead_channel_name) == 0) return(NULL)
   
@@ -168,6 +179,7 @@ reportNonCells <- function(sample) {
   live_dead_channel_idx <-
     which(sample$parameter_name == sample$live_dead_channel_name)
   exprs <- fcsExprs(sample, keep_dead = TRUE)
+  if (nrow(exprs) > max_n) exprs <- exprs[sample(seq(nrow(exprs)), max_n), ]
   df <- data.frame(
     EventType =
       factor(ifelse(exprs$Dead, "Dead", "Alive"), levels = c("Alive", "Dead")),

@@ -4,10 +4,12 @@
 \alias{reportNonCells}
 \title{Non-cells report.}
 \usage{
-reportNonCells(sample)
+reportNonCells(sample, max_n = Inf)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}
+
+\item{max_n}{Subsample the data to a maximum of max_n cells.}
 }
 \value{
 An orloj report list with all of the required objects.
