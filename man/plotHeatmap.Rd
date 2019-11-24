@@ -14,8 +14,8 @@ plotHeatmap(hm, x, y, value, type = NULL, title = NULL,
 
 \item{value}{Column name for tile values.}
 
-\item{type}{Heatmap type. Accepted values are NULL, "cluster_labels", and
-"abundance". This will set some of the heatmap's formatting.}
+\item{type}{Heatmap type (NULL, cluster_labels, abundance, or change). This
+will influence formatting.}
 
 \item{title}{Plot title.}
 

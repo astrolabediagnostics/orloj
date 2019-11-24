@@ -319,8 +319,8 @@ plotBoxPlot <- function(data,
 #' @param hm Data frame with heatmap data.
 #' @param x,y Column names for X-axis and Y-axis, respectively.
 #' @param value Column name for tile values.
-#' @param type Heatmap type. Accepted values are NULL, "cluster_labels", and
-#' "abundance". This will set some of the heatmap's formatting.
+#' @param type Heatmap type (NULL, cluster_labels, abundance, or change). This
+#'             will influence formatting.
 #' @param title Plot title.
 #' @param x_axis_order,y_axis_order Order of X- and Y-axis tick labels. If none
 #' specified, \code{\link[gtools]{mixedsort}} will be used.
@@ -337,6 +337,7 @@ plotHeatmap <- function(hm,
                         title = NULL,
                         x_axis_order = NULL,
                         y_axis_order = NULL,
+                        fill_limits = NULL,
                         theme = NULL) {
   # Add backticks to all variable names to avoid aes_string issues.
   x_bt     <- addBackticks(x)
@@ -369,25 +370,37 @@ plotHeatmap <- function(hm,
   if (!is.null(type)) {
     if (type == "cluster_labels") {
       plt <- plt +
-        scale_fill_gradient(low = "white",
+        scale_fill_gradient(limits = fill_limits,
+                            low = "white",
                             high = "#003300",
                             na.value = "black")
     } else if (type == "cluster_labels_cv") {
       plt <- plt +
-        scale_fill_gradient(low = "white",
-                            high = "red",
+        scale_fill_gradient(limits = fill_limits,
+                            low = "white",
+                            high = "firebrick",
                             na.value = "black")
     } else if (type == "frequency") {
       plt <- plt +
-        scale_fill_gradient(labels = scales::percent,
+        scale_fill_gradient(limits = fill_limits,
+                            labels = scales::percent,
                             low = "white",
                             high = "purple",
                             na.value = "black")
     } else if (type == "scaled_frequency") {
       plt <- plt +
-        scale_fill_gradient(low = "white",
+        scale_fill_gradient(limits = fill_limits,
+                            low = "white",
                             high = "goldenrod4",
                             na.value = "black")
+    } else if (type == "change") {
+      plt <- plt +
+        scale_fill_gradient2(limits = fill_limits,
+                             low = "deepskyblue",
+                             mid = "white",
+                             high = "firebrick",
+                             midpoint = 0,
+                             na.value = "black")
     } else {
       stop("Unknown heatmap type")
     }
