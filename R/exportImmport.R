@@ -110,7 +110,7 @@ exportImmport <- function(file_path, experiment, sample_id) {
     
     # Iterate backward across the hierarchy and get the markers in current
     # subset and each of its parents, stopping at "Root".
-    while (cell_subset != "Root") {
+    while (length(cell_subset) > 0 && cell_subset != "Root") {
       while (grepl("_unassigned", cell_subset)) {
         cell_subset <- gsub("_unassigned", "", cell_subset)
       }
