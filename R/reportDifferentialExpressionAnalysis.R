@@ -51,7 +51,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
                                       experiment$samples$SampleId)]
       
       # Figure: Heat map of maximum fold changes.
-      y_max <- ceiling(max(abs(dea$MaxFc), na.rm = TRUE) / 0.25) * 0.25
+      y_max <- ceiling(max(abs(dea$MaxFc), na.rm = TRUE))
       y_max <- max(y_max, 2)
       fc_heat_map <- 
         plotHeatmap(dea,
@@ -83,23 +83,46 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
                        measure.vars = sample_order,
                        variable.name = "SampleId",
                        value.name = "Mean")
+      if (is.na(kit$ReferenceFeatureId)) {
+        marker_legend_label <- "Marker Mean"
+      } else {
+        reference_feature_id <- 
+          gsub("feature_", "", kit$ReferenceFeatureId, fixed = TRUE)
+        reference_feature_name <-
+          subset(experiment$features,
+                 FeatureId == reference_feature_id)$FeatureName
+        marker_legend_label <-
+          paste0("Mean Intensity - (", reference_feature_name, ", ", 
+                 kit$ReferenceFeatureBaselineValue, ")")
+      }
       for (channel_name in kit$ChannelNames[[1]]) {
         channel_dea_long <- subset(dea_long, ChannelName == channel_name)
+        channel_dea_long[[marker_legend_label]] <- channel_dea_long$Mean
+
+        # Make the color coding friendlier for humans to look at by rounding and
+        # setting reasonable min/max values.
+        fill_min <-
+          floor(min(channel_dea_long$Mean, na.rm = TRUE))
+        # If there's no reference feature, minimum is 0 or close to 0, we don't
+        # want to push it lower than that.
+        if (!is.na(kit$ReferenceFeatureId)) fill_min <- min(fill_min, -2)
         fill_max <-
-          ceiling(max(abs(channel_dea_long$Mean), na.rm = TRUE) / 0.25) * 0.25
+          ceiling(max(channel_dea_long$Mean, na.rm = TRUE))
         fill_max <- max(fill_max, 2)
+
         channel_heat_map <- 
           plotHeatmap(channel_dea_long,
                       x = "CellSubset",
                       y = "SampleId",
-                      value = "Mean",
+                      value = marker_legend_label,
                       type = "change",
-                      fill_limits = c(-fill_max, fill_max))
+                      fill_limits = c(fill_min, fill_max))
         channel_heat_map$plt <- 
           channel_heat_map$plt +
           scale_y_discrete(name = "Sample",
                            limits = sample_order,
-                           labels = sample_names)
+                           labels = sample_names) +
+          guides(fill = guide_colorbar(title.position = "top"))
         # Transpose data to match heat map (rows are samples) and change sample
         # IDs to sample names.
         cell_subsets <- channel_heat_map$data$CellSubset
