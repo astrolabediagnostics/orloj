@@ -10,6 +10,9 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
   # Value for NA feature value. Samples with this value should not be included
   # in the analysis.
   FEATURE_NA <- "__NA__"
+  # Minimum value for legends.
+  LEGEND_MIN <- 1
+  # Minimum max fold change to include ridge plot of marker.
   RIDGE_MIN_MAXFC <- 0.5
   
   differential_expression_analysis <-
@@ -52,7 +55,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
       
       # Figure: Heat map of maximum fold changes.
       y_max <- ceiling(max(abs(dea$MaxFc), na.rm = TRUE))
-      y_max <- max(y_max, 2)
+      y_max <- max(y_max, LEGEND_MIN)
       fc_heat_map <- 
         plotHeatmap(dea,
                     x = "ChannelName",
@@ -105,10 +108,12 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
           floor(min(channel_dea_long$Mean, na.rm = TRUE))
         # If there's no reference feature, minimum is 0 or close to 0, we don't
         # want to push it lower than that.
-        if (!is.na(kit$ReferenceFeatureId)) fill_min <- min(fill_min, -2)
+        if (!is.na(kit$ReferenceFeatureId)) {
+          fill_min <- min(fill_min, -LEGEND_MIN)
+        }
         fill_max <-
           ceiling(max(channel_dea_long$Mean, na.rm = TRUE))
-        fill_max <- max(fill_max, 2)
+        fill_max <- max(fill_max, LEGEND_MIN)
 
         channel_heat_map <- 
           plotHeatmap(channel_dea_long,
