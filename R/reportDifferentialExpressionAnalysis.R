@@ -36,8 +36,11 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
     for (kit_name in names(level_dea)) {
       if (verbose) message(paste0("\t", kit_name))
       kit <- subset(experiment$de_analysis_kits, Name == kit_name)
+      primary_feature_name <-
+        subset(experiment$features,
+               FeatureId == gsub("feature_", "",
+                                 kit$PrimaryFeatureId))$FeatureName
       dea <- differential_expression_analysis[[level]][[kit_name]]$dea
-      report[[kit_name]] <- list()
       
       # Get sample features for this kit and decide on sample order (sort by
       # primary and make sure that baseline is first).
@@ -53,6 +56,20 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
         experiment$samples$Name[match(sample_order,
                                       experiment$samples$SampleId)]
       
+
+      # Spreadsheet: DE analysis results, formatted nicely.
+      first_cols <-
+        c("CellSubset", "ChannelName", "MaxFc", "P.Value", "adj.P.Val")
+      remove_cols <- c("AveExpr", "t", "B")
+      contrast_cols <-
+        setdiff(colnames(dea), c(first_cols, remove_cols, sample_order))
+      dea_samples <- dea[, sample_order]
+      colnames(dea_samples) <- sample_names
+      dea_report <- cbind(dea[, c(first_cols, contrast_cols)], dea_samples)
+      rownames(dea_report) <- NULL
+      report[[kit_name]] <- list(data = dea_report)
+
+
       # Figure: Heat map of maximum fold changes.
       y_max <- ceiling(max(abs(dea$MaxFc), na.rm = TRUE))
       y_max <- max(y_max, LEGEND_MIN)
@@ -78,6 +95,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
       fc_heat_map$data <- fc_heat_map$data[rev(cell_subset_order), ]
       report[[paste0(kit_name, "_fold_change")]] <- fc_heat_map
       
+
       # Figures: Heat map of marker intensity across samples for each marker.
       if (verbose) message("\theat map of market intensity")
       dea_long <-
@@ -136,8 +154,55 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
         colnames(channel_heat_map$data) <- cell_subsets
         rownames(channel_heat_map$data) <- rev(sample_names)
 
-        report[[kit_name]][[paste0(channel_name, "_intensity")]] <- channel_heat_map
+        report[[kit_name]][[paste0("heat_map.", channel_name)]] <- channel_heat_map
       }
+
+
+      # Figures: Dot and box plot of marker intensity across samples.
+      for (channel_name in kit$ChannelNames[[1]]) {
+        # Get DEA data for this channel and join with primary feature.
+        channel_dea_long <- subset(dea_long, ChannelName == channel_name)
+        channel_dea_long <-
+          dplyr::left_join(channel_dea_long, sample_features, by = "SampleId")
+        channel_dea_long[[kit$PrimaryFeatureId]] <- 
+          factor(channel_dea_long[[kit$PrimaryFeatureId]])
+        channel_dea_long[[kit$PrimaryFeatureId]] <- 
+          relevel(channel_dea_long[[kit$PrimaryFeatureId]],
+                  ref = kit$PrimaryFeatureBaselineValue)
+
+        width <- 900
+        height <- ceiling(length(cell_subset_order) / 4) * 2.5 * 100
+
+        # Bar plot.
+        channel_dot_plot <-
+          ggplot(channel_dea_long, aes(x = SampleId, y = Mean)) +
+          geom_point(aes_string(color = kit$PrimaryFeatureId)) +
+          scale_x_discrete(limits = sample_order, labels = sample_names) +
+          scale_color_brewer(name = primary_feature_name, palette = "Dark2") +
+          facet_wrap(~ CellSubset, scales = "free", ncol = 4) +
+          labs(y = marker_legend_label) +
+          theme_linedraw() +
+          theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0),
+                axis.title.x = element_blank(),
+                legend.position = "top")
+        report[[kit_name]][[paste0("dot_plot.", channel_name)]] <-
+          list(plt = channel_dot_plot, width = width, height = height)
+
+        # Box plot.
+        set.seed(12345)
+        channel_box_plot <- 
+          ggplot(channel_dea_long,
+                 aes_string(x = kit$PrimaryFeatureId, y = "Mean")) +
+          geom_boxplot(outlier.shape = NA) +
+          geom_jitter(width = 0.15, alpha = 0.4) +
+          facet_wrap(~ CellSubset, scales = "free", ncol = 4) +
+          labs(y = marker_legend_label) +
+          theme_linedraw() +
+          theme(axis.title.x = element_blank())
+        report[[kit_name]][[paste0("box_plot.", channel_name)]] <-
+          list(plt = channel_box_plot, width = width, height = height)
+      }
+
 
       # Figures: Ridge plots of marker intensity distributions across samples
       # for each (Marker, Cell Subset) combination with MaxFC g.t.e
