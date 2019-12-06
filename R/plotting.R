@@ -56,7 +56,13 @@ exportPlot <- function(filename, plt_list, dpi = 100, verbose = FALSE) {
   if (!is.null(plt_list$data)) {
     # Export data as CSV.
     if (verbose) message("exporting data")
-    write.csv(plt_list$data, paste0(filename, ".csv"))
+    filename_csv <- filename
+    if (grepl("\\.", filename_csv)) {
+      # Replace file extension with csv.
+      filename_csv <- strsplit(filename_csv, "\\.")[[1]]
+      filename_csv <- paste(c(head(filename_csv, -1), "csv"), collapse = ".")
+    }
+    write.csv(plt_list$data, filename_csv)
   }
 }
 
@@ -86,15 +92,24 @@ exportReport <- function(dir,
       # Skip empty plots.
       if (verbose) message("\tskipping")
       next
-    } else if ("plt" %in% plot_contents || "data" %in% plot_contents) {
-      # A single plot.
+    }
+
+    if ("plt" %in% plot_contents || "data" %in% plot_contents) {
+      # Export a single plot.
       if (verbose) message("\texporting single plot")
       plot_filename <-
         file.path(dir, paste0(gsub("/", "_", plot_name_nice), ".", file_format))
       exportPlot(plot_filename, report[[plot_name]], dpi, verbose)
-    } else {
+    }
+
+    if (length(setdiff(plot_contents,
+                       c("plt", "data", "width", "height"))) > 0) {
       # Another layer of plots, recursively export them.
       if (verbose) message("\trecursion into new layer")
+      report[[plot_name]]$plt <- NULL
+      report[[plot_name]]$data <- NULL
+      report[[plot_name]]$width <- NULL
+      report[[plot_name]]$height <- NULL
       plot_path <- file.path(dir, plot_name_nice)
       dir.create(plot_path)
       exportReport(plot_path, report[[plot_name]], file_format, dpi, verbose)
