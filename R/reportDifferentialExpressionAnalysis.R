@@ -194,11 +194,14 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
           ggplot(channel_dea_long,
                  aes_string(x = kit$PrimaryFeatureId, y = "Mean")) +
           geom_boxplot(outlier.shape = NA) +
-          geom_jitter(width = 0.15, alpha = 0.4) +
+          geom_jitter(aes_string(color = kit$PrimaryFeatureId),
+                      width = 0.15, alpha = 0.4) +
+          scale_color_brewer(name = primary_feature_name, palette = "Dark2") +
           facet_wrap(~ CellSubset, scales = "free", ncol = 4) +
           labs(y = marker_legend_label) +
           theme_linedraw() +
-          theme(axis.title.x = element_blank())
+          theme(axis.title.x = element_blank(),
+                legend_position = "top")
         report[[kit_name]][[paste0("box_plot.", channel_name)]] <-
           list(plt = channel_box_plot, width = width, height = height)
       }
