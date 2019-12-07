@@ -91,24 +91,29 @@ filenameify <- function(str, extension = NULL) {
 #' @return A list with indices for each of the standard channels.
 #' @export
 findStandardMassCytometryChannels <- function(sample) {
-  time_idx <- grep("time", sample$parameter_name, ignore.case = TRUE)
+  # Allow parameter_name as input instead of sample.
+  if (isSample(sample)) {
+    parameter_name <- sample$parameter_name
+  } else parameter_name <- sample
+
+  time_idx <- grep("time", parameter_name, ignore.case = TRUE)
 
   # Event length or cell length.
   event_length_idx <-
     intersect(
-      grep("event", sample$parameter_name, ignore.case = TRUE),
-      grep("length", sample$parameter_name, ignore.case = TRUE)
+      grep("event", parameter_name, ignore.case = TRUE),
+      grep("length", parameter_name, ignore.case = TRUE)
     )
   if (length(event_length_idx) == 0) {
     event_length_idx <-
       intersect(
-        grep("cell", sample$parameter_name, ignore.case = TRUE),
-        grep("length", sample$parameter_name, ignore.case = TRUE)
+        grep("cell", parameter_name, ignore.case = TRUE),
+        grep("length", parameter_name, ignore.case = TRUE)
       )
   }
 
-  dna191_idx <- which(sample$parameter_name == "Ir191Di")
-  dna193_idx <- which(sample$parameter_name == "Ir193Di")
+  dna191_idx <- which(parameter_name == "Ir191Di")
+  dna193_idx <- which(parameter_name == "Ir193Di")
 
   # Set missing values to NULL.
   if (length(time_idx) == 0)          time_idx <- NULL
