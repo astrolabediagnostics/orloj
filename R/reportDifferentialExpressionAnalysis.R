@@ -14,10 +14,14 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
   LEGEND_MIN <- 1
   # Minimum max fold change to include ridge plot of marker.
   RIDGE_MIN_MAXFC <- 0.5
+  # Maximum number of samples for ridge plots and dot plots.
+  SAMPLE_COUNT_MAX_N <- 50
   
   differential_expression_analysis <-
     experimentDifferentialExpressionAnalysis(experiment)
   # Load channel densities across all samples.
+  channel_dens <- NULL
+  if (nrow(experiment$samples) <= SAMPLE_COUNT_MAX_N) {
     channel_dens <-
       lapply(nameVector(experiment$samples$SampleId), function(sample_id) {
         readRDS(file.path(
@@ -25,6 +29,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
           paste0(sample_id,
                  ".aggregate_statistics.RDS")))$subset_channel_densities
       })
+  }
   
   # Separate directory for each cell subset level.
   lapply(nameVector(names(differential_expression_analysis)), function(level) {
@@ -173,20 +178,22 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
         width <- 900
         height <- ceiling(length(cell_subset_order) / 4) * 2.5 * 100
 
-        # Bar plot.
-        channel_dot_plot <-
-          ggplot(channel_dea_long, aes(x = SampleId, y = Mean)) +
-          geom_point(aes_string(color = kit$PrimaryFeatureId)) +
-          scale_x_discrete(limits = sample_order, labels = sample_names) +
-          scale_color_brewer(name = primary_feature_name, palette = "Dark2") +
-          facet_wrap(~ CellSubset, scales = "free", ncol = 4) +
-          labs(y = marker_legend_label) +
-          theme_linedraw() +
-          theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0),
-                axis.title.x = element_blank(),
-                legend.position = "top")
-        report[[kit_name]][[paste0("dot_plot.", channel_name)]] <-
-          list(plt = channel_dot_plot, width = width, height = height)
+        # Dot plot.
+        if (!is.null(channel_dens)) {
+          channel_dot_plot <-
+            ggplot(channel_dea_long, aes(x = SampleId, y = Mean)) +
+            geom_point(aes_string(color = kit$PrimaryFeatureId)) +
+            scale_x_discrete(limits = sample_order, labels = sample_names) +
+            scale_color_brewer(name = primary_feature_name, palette = "Dark2") +
+            facet_wrap(~ CellSubset, scales = "free", ncol = 4) +
+            labs(y = marker_legend_label) +
+            theme_linedraw() +
+            theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0),
+                  axis.title.x = element_blank(),
+                  legend.position = "top")
+          report[[kit_name]][[paste0("dot_plot.", channel_name)]] <-
+            list(plt = channel_dot_plot, width = width, height = height)
+        }
 
         # Box plot.
         set.seed(12345)
@@ -210,68 +217,70 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
       # Figures: Ridge plots of marker intensity distributions across samples
       # for each (Marker, Cell Subset) combination with MaxFC g.t.e
       # RIDGE_MIN_MAXFC.
-      if (verbose) message("\tridge plots")
-      reference_means <-
-        differential_expression_analysis[[level]][[kit_name]]$reference_means
-      ridge_dea <- subset(dea, abs(MaxFc) >= RIDGE_MIN_MAXFC)
-      if (nrow(ridge_dea) > 0) {
-        for (row_idx in seq(nrow(ridge_dea))) {
-          channel_name <- ridge_dea$ChannelName[row_idx]
-          if (is.null(report[[kit_name]][[channel_name]])) {
-            report[[kit_name]][[channel_name]] <- list()
-          }
-          cell_subset <- ridge_dea$CellSubset[row_idx]
-          if (verbose) message(paste0("\t\t", channel_name, ", ", cell_subset))
+      if (!is.null(channel_dens)) {
+        if (verbose) message("\tridge plots")
+        reference_means <-
+          differential_expression_analysis[[level]][[kit_name]]$reference_means
+        ridge_dea <- subset(dea, abs(MaxFc) >= RIDGE_MIN_MAXFC)
+        if (nrow(ridge_dea) > 0) {
+          for (row_idx in seq(nrow(ridge_dea))) {
+            channel_name <- ridge_dea$ChannelName[row_idx]
+            if (is.null(report[[kit_name]][[channel_name]])) {
+              report[[kit_name]][[channel_name]] <- list()
+            }
+            cell_subset <- ridge_dea$CellSubset[row_idx]
+            if (verbose) message(paste0("\t\t", channel_name, ", ", cell_subset))
 
-          # Find the X-axis values for each sample after subtracting
-          # reference_means.
-          x_vals <- 
-            lapply(nameVector(sample_order), function(sample_id) {
-              x <- channel_dens[[sample_id]][[level]][[cell_subset]][[channel_name]]$x
-              if (is.null(reference_means)) {
-                x
-              } else {
-                sample_rm <-
-                  subset(reference_means,
-                         SampleId == sample_id & CellSubset == cell_subset &
-                           ChannelName == channel_name)$ReferenceMean
-                x - sample_rm
-              }
+            # Find the X-axis values for each sample after subtracting
+            # reference_means.
+            x_vals <- 
+              lapply(nameVector(sample_order), function(sample_id) {
+                x <- channel_dens[[sample_id]][[level]][[cell_subset]][[channel_name]]$x
+                if (is.null(reference_means)) {
+                  x
+                } else {
+                  sample_rm <-
+                    subset(reference_means,
+                           SampleId == sample_id & CellSubset == cell_subset &
+                             ChannelName == channel_name)$ReferenceMean
+                  x - sample_rm
+                }
+              })
+            # Calculate global x-axis limits.
+            x_min <- min(unlist(x_vals))
+            x_max <- max(unlist(x_vals))
+            
+            # Generate plot for each sample.
+            plts <- lapply(rev(sample_order), function(sample_id) {
+              sample_name <- 
+                subset(experiment$samples, SampleId == sample_id)$Name
+              dens <-
+                channel_dens[[sample_id]][[level]][[cell_subset]][[channel_name]]
+              if (is.null(dens)) return(NULL)
+              dens_df <- data.frame(X = x_vals[[sample_id]], Y = dens$y)
+              ggplot(dens_df, aes(x = X, y = Y)) +
+                geom_line() +
+                xlim(c(x_min, x_max)) +
+                labs(x = sample_name) +
+                theme_linedraw() +
+                theme(axis.text = element_blank(),
+                      axis.ticks = element_blank(),
+                      axis.title.x = element_text(size = 4),
+                      axis.title.y = element_blank())
             })
-          # Calculate global x-axis limits.
-          x_min <- min(unlist(x_vals))
-          x_max <- max(unlist(x_vals))
-          
-          # Generate plot for each sample.
-          plts <- lapply(rev(sample_order), function(sample_id) {
-            sample_name <- 
-              subset(experiment$samples, SampleId == sample_id)$Name
-            dens <-
-              channel_dens[[sample_id]][[level]][[cell_subset]][[channel_name]]
-            if (is.null(dens)) return(NULL)
-            dens_df <- data.frame(X = x_vals[[sample_id]], Y = dens$y)
-            ggplot(dens_df, aes(x = X, y = Y)) +
-              geom_line() +
-              xlim(c(x_min, x_max)) +
-              labs(x = sample_name) +
-              theme_linedraw() +
-              theme(axis.text = element_blank(),
-                    axis.ticks = element_blank(),
-                    axis.title.x = element_text(size = 4),
-                    axis.title.y = element_blank())
-          })
-          # Remove any missing samples from plts.
-          plts <- plts[unlist(lapply(plts, function(l) !is.null(l)))]
-          # Set up orloj plot and update report.
-          plt <-
-            Reduce(`+`, plts) +
-            patchwork::plot_layout(ncol = 1) +
-            patchwork::plot_annotation(
-              subtitle = paste0(cell_subset, " (", channel_name, ")"))
-          report[[kit_name]][[channel_name]][[cell_subset]] <- 
-            list(plt = plt,
-                 width = 300,
-                 height = 50 + 50 * length(sample_order))
+            # Remove any missing samples from plts.
+            plts <- plts[unlist(lapply(plts, function(l) !is.null(l)))]
+            # Set up orloj plot and update report.
+            plt <-
+              Reduce(`+`, plts) +
+              patchwork::plot_layout(ncol = 1) +
+              patchwork::plot_annotation(
+                subtitle = paste0(cell_subset, " (", channel_name, ")"))
+            report[[kit_name]][[channel_name]][[cell_subset]] <- 
+              list(plt = plt,
+                   width = 300,
+                   height = 50 + 50 * length(sample_order))
+          }
         }
       }
     }
