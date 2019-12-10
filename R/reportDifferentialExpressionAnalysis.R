@@ -208,7 +208,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
           labs(y = marker_legend_label) +
           theme_linedraw() +
           theme(axis.title.x = element_blank(),
-                legend_position = "top")
+                legend.position = "top")
         report[[kit_name]][[paste0("box_plot.", channel_name)]] <-
           list(plt = channel_box_plot, width = width, height = height)
       }
