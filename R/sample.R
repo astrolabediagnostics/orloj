@@ -173,7 +173,8 @@ fcsExprs <- function(sample,
     if (!is.null(sample$granulocyte_is_debris)) {
       if (sample$granulocyte_is_debris) {
         # Set granulocyte to debris if required by experiment.
-        debris_labels <- c(debris_labels, "Granulocyte")
+        debris_labels <-
+          c(debris_labels, "Granulocyte", "Neutrophil", "Eosinophil")
       }
     }
     if (!is.null(sample$root_unassigned_is_debris)) {
