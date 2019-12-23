@@ -14,6 +14,8 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
   LEGEND_MIN <- 1
   # Minimum max fold change to include ridge plot of marker.
   RIDGE_MIN_MAXFC <- 0.5
+  # Minimum number of ridge plots to include.
+  RIDGE_MIN_N <- 20
   # Maximum number of samples for ridge plots and dot plots.
   SAMPLE_COUNT_MAX_N <- 50
   
@@ -72,6 +74,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
       colnames(dea_samples) <- sample_names
       dea_report <- cbind(dea[, c(first_cols, contrast_cols)], dea_samples)
       rownames(dea_report) <- NULL
+      dea_report <- dea_report[order(dea_report$P.Value), ]
       report[[kit_name]] <- list(data = dea_report)
 
 
@@ -110,7 +113,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
                        variable.name = "SampleId",
                        value.name = "Mean")
       if (is.na(kit$ReferenceFeatureId)) {
-        marker_legend_label <- "Marker Mean"
+        marker_legend_label <- "Mean"
       } else {
         reference_feature_id <- 
           gsub("feature_", "", kit$ReferenceFeatureId, fixed = TRUE)
@@ -118,7 +121,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
           subset(experiment$features,
                  FeatureId == reference_feature_id)$FeatureName
         marker_legend_label <-
-          paste0("Mean Intensity - (", reference_feature_name, ", ", 
+          paste0("Mean - (", reference_feature_name, ", ", 
                  kit$ReferenceFeatureBaselineValue, ")")
       }
       for (channel_name in kit$ChannelNames[[1]]) {
@@ -144,12 +147,13 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
                       y = "SampleId",
                       value = marker_legend_label,
                       type = "change",
+                      title = channel_name,
                       fill_limits = c(fill_min, fill_max))
         channel_heat_map$plt <- 
           channel_heat_map$plt +
           scale_y_discrete(name = "Sample",
                            limits = sample_order,
-                           labels = sample_names) +
+                           labels = .shortenSampleNames(sample_names)) +
           guides(fill = guide_colorbar(title.position = "top"))
         # Transpose data to match heat map (rows are samples) and change sample
         # IDs to sample names.
@@ -183,10 +187,11 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
           channel_dot_plot <-
             ggplot(channel_dea_long, aes(x = SampleId, y = Mean)) +
             geom_point(aes_string(color = kit$PrimaryFeatureId)) +
-            scale_x_discrete(limits = sample_order, labels = sample_names) +
+            scale_x_discrete(limits = sample_order,
+                             labels = .shortenSampleNames(sample_names)) +
             scale_color_brewer(name = primary_feature_name, palette = "Dark2") +
             facet_wrap(~ CellSubset, scales = "free", ncol = 4) +
-            labs(y = marker_legend_label) +
+            labs(y = paste0(channel_name, " ", marker_legend_label)) +
             theme_linedraw() +
             theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0),
                   axis.title.x = element_blank(),
@@ -205,7 +210,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
                       width = 0.15, alpha = 0.4) +
           scale_color_brewer(name = primary_feature_name, palette = "Dark2") +
           facet_wrap(~ CellSubset, scales = "free", ncol = 4) +
-          labs(y = marker_legend_label) +
+          labs(y = paste0(channel_name, " ", marker_legend_label)) +
           theme_linedraw() +
           theme(axis.title.x = element_blank(),
                 legend.position = "top")
@@ -222,6 +227,17 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
         reference_means <-
           differential_expression_analysis[[level]][[kit_name]]$reference_means
         ridge_dea <- subset(dea, abs(MaxFc) >= RIDGE_MIN_MAXFC)
+        if (nrow(ridge_dea) < RIDGE_MIN_N && level != "Profiling") {
+          # Heuristic: Add ridge plots to the count of RIDGE_MIN_N.
+          ridge_dea <-
+            rbind(
+              ridge_dea,
+              dea %>%
+                dplyr::filter(!grepl("unassigned", CellSubset)) %>%
+                dplyr::arrange(P.Value) %>%
+                dplyr::slice(seq(RIDGE_MIN_N - nrow(ridge_dea)))
+            )
+        }
         if (nrow(ridge_dea) > 0) {
           for (row_idx in seq(nrow(ridge_dea))) {
             channel_name <- ridge_dea$ChannelName[row_idx]
@@ -287,4 +303,14 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
     
     report
   })
+}
+
+.shortenSampleNames <- function(v, max_nchar = 10) {
+  # Shorten sample name vector, if it's longer than given character count.
+  unlist(lapply(v, function(s) {
+    if (nchar(s) <= max_nchar) {
+      return(s)
+    }
+    paste0(substr(s, 1, max_nchar), "...")
+  }))
 }
