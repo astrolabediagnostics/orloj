@@ -69,13 +69,6 @@ isSample <- function(sample) {
       s <- gsub(paste0("_", mass_str), "", s)
     }))
   
-  # Check whether removal succeeded.
-  suspect_match <-
-    unlist(lapply(desc, function(s) { grepl(mass_str, s) & grepl("_", s) }))
-  if (sum(suspect_match) >= 2) {
-    stop("failed to remove masses from channel descriptions")
-  }
-  
   return(desc);
 }
 
