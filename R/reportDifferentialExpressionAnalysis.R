@@ -260,7 +260,8 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
         scale_x_discrete(limits = sample_order,
                          labels = .shortenSampleNames(sample_names)) +
         scale_color_brewer(name = primary_feature_name, palette = "Dark2") +
-        facet_wrap(~ CellSubset, scales = "free", ncol = 4) +
+        facet_wrap(~ CellSubset, scales = "free", ncol = 4,
+                   labeller = label_wrap_gen()) +
         labs(y = paste0(channel_name, " ", marker_legend_label)) +
         theme_linedraw() +
         theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0),
@@ -279,7 +280,8 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
       geom_jitter(aes_string(color = kit$PrimaryFeatureId),
                   width = 0.15, alpha = 0.4) +
       scale_color_brewer(name = primary_feature_name, palette = "Dark2") +
-      facet_wrap(~ CellSubset, scales = "free", ncol = 4) +
+      facet_wrap(~ CellSubset, scales = "free", ncol = 4,
+                 labeller = label_wrap_gen()) +
       labs(y = paste0(channel_name, " ", marker_legend_label)) +
       theme_linedraw() +
       theme(axis.title.x = element_blank(),
