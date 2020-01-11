@@ -14,7 +14,7 @@ auroraTransformChannels <- function(flow_frame) {
   cols <- flowCore::colnames(flow_frame)
 
   # Channels to ignore.
-  ignore_pattern <- "(^FSC-.$|^SSC-.$|^Time$)"
+  ignore_pattern <- "(^FSC|^SSC|^Time)"
   transform_cols <- grep(ignore_pattern, cols, value = TRUE, invert = TRUE)
   # Calculate and apply expectedLogicle. The prefix ^ is required due to an
   # issue with flowCore's regular expression.
@@ -33,7 +33,7 @@ auroraTransformChannels <- function(flow_frame) {
   # Scale SSC and FSC channels to the range in which we expect to find
   # transformed antibodies.
   
-  fsc_ssc_pattern <- "(^FSC-.$|^SSC-.$)"
+  fsc_ssc_pattern <- "(^FSC|^SSC|^Time)"
   fsc_ssc_cols <- which(grepl(fsc_ssc_pattern, sample$parameter_name))
   # Set minimum value to 0.
   for (col in fsc_ssc_cols) {

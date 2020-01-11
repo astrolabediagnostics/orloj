@@ -120,7 +120,7 @@ importFcsChannels <- function(filename) {
   channels$Desc <- channels$OrigDesc
 
   # Copy flow-specific channels from name to desc.
-  flow_pattern <- "(^FSC-.$|^SSC-.$)"
+  flow_pattern <- "(^FSC|^SSC|^Time)"
   flow_names <- grepl(flow_pattern, channels$Name)
   channels$Desc[flow_names] <- channels$Name[flow_names]
   # Remove masses and EQ suffix from channel descriptions.
