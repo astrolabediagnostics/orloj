@@ -11,16 +11,33 @@
 #' @return Transformed flow_frame.
 #' @export
 auroraTransformChannels <- function(flow_frame) {
-  cols <- flowCore::colnames(flow_frame)
-
-  # Channels to ignore.
+  # Choose which channels to transform.
   ignore_pattern <- "(^FSC|^SSC|^Time)"
-  transform_cols <- grep(ignore_pattern, cols, value = TRUE, invert = TRUE)
-  # Calculate and apply expectedLogicle. The prefix ^ is required due to an
-  # issue with flowCore's regular expression.
+  channels <- 
+    grep(ignore_pattern, flowCore::colnames(flow_frame), value = TRUE,
+         invert = TRUE)
+
+  # Calculate and apply expectedLogicle. The "^" is required  due to issues with
+  # logicle's regular expressions.
   el <-
     flowCore::estimateLogicle(flow_frame,
-                              channels = paste0("^", transform_cols))
+                              channels = paste0("^", channels))
+  # In extreme cases, estimateLogicle of a given channel might end up with
+  # illegal parameters. Try to sidestep the situation by estimating on a subset
+  # of the data.
+  for (ch in channels) {
+    el_apply <- try(el@transforms[[ch]]@f(1), silent = TRUE)
+    if (class(el_apply) == "try-error") {
+      message(paste0("auroraTransformChannels: ", ch, 
+                     " leads to transform error"))
+      q_thresh <- quantile(flow_frame@exprs[, ch], 0.2)
+      el_ch <-
+        flowCore::estimateLogicle(flow_frame[flow_frame[, ch] >= q_thresh, ],
+                                  channels = paste0("^", ch))
+      el@transforms[[ch]] <- el_ch@transforms[[ch]]
+    }
+  }
+  
   flow_frame <- flowCore::transform(flow_frame, el)
 
   list(
