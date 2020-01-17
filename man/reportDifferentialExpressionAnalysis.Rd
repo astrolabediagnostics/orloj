@@ -4,7 +4,7 @@
 \alias{reportDifferentialExpressionAnalysis}
 \title{Differential expression analysis report.}
 \usage{
-reportDifferentialExpressionAnalysis(experiment)
+reportDifferentialExpressionAnalysis(experiment, verbose = FALSE)
 }
 \arguments{
 \item{experiment}{An Astrolabe experiment.}
