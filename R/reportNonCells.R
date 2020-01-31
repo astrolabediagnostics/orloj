@@ -118,11 +118,10 @@ reportNonCells <- function(sample, max_n = Inf) {
   fsc_a <- grep("FSC_A", sample$parameter_desc, fixed = TRUE, value = TRUE)
   fsc_h <- grep("FSC_H", sample$parameter_desc, fixed = TRUE, value = TRUE)
   ssc_a <- grep("SSC_A", sample$parameter_desc, fixed = TRUE, value = TRUE)
-  if (length(fsc_a) != 1 || length(fsc_h) != 1 || length(ssc_a) != 1) {
-    return(NULL)
-  }
+
+  if (length(fsc_a) != 1 || length(ssc_a) != 1) return(NULL)
   exprs$FSC_A <- exprs[[fsc_a]]
-  exprs$FSC_H <- exprs[[fsc_h]]
+  if (length(fsc_h) == 1) exprs$FSC_H <- exprs[[fsc_h]]
   exprs$SSC_A <- exprs[[ssc_a]]
   
   # Populate with debris and doublets from cleaning step.
@@ -148,25 +147,31 @@ reportNonCells <- function(sample, max_n = Inf) {
     theme(aspect.ratio = 1)
   
   # Figure: Doublets, FSC_A versus FSC_H.
-  fig_title <- 
-    paste0(prettyNum(sum(exprs$Doublet), big.mark = ","), " (",
-           round(mean(exprs$Doublet) * 100, 1), "%) doublet events")
-  plt_doublets <- 
-    ggplot(mapping = aes(x = FSC_A, y = FSC_H)) +
-    geom_point(data = subset(exprs, !Debris),
-               alpha = 0.1, color = "grey70", size = 0) +
-    geom_point(data = subset(exprs, !Debris & Doublet),
-               alpha = 0.5, color = "#1C3C44", size = 0) +
-    geom_density2d(data = exprs, color = "grey20") +
-    labs(title = fig_title) +
-    theme_linedraw() +
-    theme(aspect.ratio = 1)
+  if (length(fsc_h) != 1) {
+    # No FSC_H, no doublet report.
+    plt <- plt_debris
+    width <- fig_len
+    height <- fig_len
+  } else {
+    fig_title <- 
+      paste0(prettyNum(sum(exprs$Doublet), big.mark = ","), " (",
+             round(mean(exprs$Doublet) * 100, 1), "%) doublet events")
+    plt_doublets <- 
+      ggplot(mapping = aes(x = FSC_A, y = FSC_H)) +
+      geom_point(data = subset(exprs, !Debris),
+                 alpha = 0.1, color = "grey70", size = 0) +
+      geom_point(data = subset(exprs, !Debris & Doublet),
+                 alpha = 0.5, color = "#1C3C44", size = 0) +
+      geom_density2d(data = exprs, color = "grey20") +
+      labs(title = fig_title) +
+      theme_linedraw() +
+      theme(aspect.ratio = 1)
+    plt <- plt_debris + plt_doublets
+    width <- fig_len * 2
+    height <- fig_len
+  }
   
-  list(
-    PreprocessingDebris =
-      list(plt = plt_debris + plt_doublets,
-           width = fig_len * 2, height = fig_len)
-  )
+  list(PreprocessingDebris = list(plt = plt, width = width, height = height))
 }
 
 .plotLiveDead <- function(sample, fig_len = 400, max_n = Inf) {
