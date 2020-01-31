@@ -110,7 +110,7 @@ reportNonCells <- function(sample, max_n = Inf) {
 }
 
 .reportFlowCytometryDebrisDoublets <- function(sample, fig_len = 400,
-                                               max_n = max_n) {
+                                               max_n = Inf) {
   # Generate debris and doublet report for flow cytometry data.
   exprs <- fcsExprs(sample, keep_debris = TRUE, keep_dead = TRUE)
   

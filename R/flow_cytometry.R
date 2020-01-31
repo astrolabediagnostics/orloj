@@ -46,22 +46,18 @@ auroraTransformChannels <- function(flow_frame) {
   )
 }
 
-.auroraScaleFscSsc <- function(sample) {
+.auroraScaleFscSsc <- function(sample, new_max = 7) {
   # Scale SSC and FSC channels to the range in which we expect to find
   # transformed antibodies.
   
   fsc_ssc_pattern <- "(^FSC|^SSC|^Time)"
   fsc_ssc_cols <- which(grepl(fsc_ssc_pattern, sample$parameter_name))
-  # Set minimum value to 0.
   for (col in fsc_ssc_cols) {
     sample$exprs[[col]] <- pmax(0, sample$exprs[[col]])
+    v <- sample$exprs[[col]]
+    v <- v[v < quantile(v, 0.99)]
+    sample$exprs[[col]] <- sample$exprs[[col]] / max(v) * new_max
   }
-  # Calculate factor based on all FSC/SSC channels.
-  fsc_ssc_factor <-
-    10 ^ floor(log10(quantile(unlist(sample$exprs[, fsc_ssc_cols]), 0.95)))
-  sample$exprs[, fsc_ssc_cols] <- sample$exprs[, fsc_ssc_cols] / fsc_ssc_factor
-  
-  sample$fsc_ssc_factor <- fsc_ssc_factor
 
   sample
 }
