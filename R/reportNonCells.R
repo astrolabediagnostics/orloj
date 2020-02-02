@@ -6,7 +6,7 @@
 #' @param max_n Subsample the data to a maximum of max_n cells.
 #' @return An orloj report list with all of the required objects.
 #' @export
-reportNonCells <- function(sample, max_n = Inf) {
+reportNonCells <- function(sample, max_n = 1000000) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   # Figure dimensions.
