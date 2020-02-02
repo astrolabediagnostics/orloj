@@ -241,23 +241,3 @@ convertFlowFrame <- function(experiment, filename, flow_frame) {
     parameter_desc = desc
   )
 }
-
-#' Preprocess an Astrolabe sample.
-#'
-#' @param experiment An Astrolabe experiment.
-#' @param sample An Astrolabe sample.
-#' @return Sample after the above steps are done.
-#' @export
-preprocess <- function(experiment, sample) {
-  if (!isSample(sample)) stop("Expecting an Astrolabe sample")
-
-  if (experiment$instrument == "mass_cytometry") {
-    massPreprocess(sample)
-  } else if (experiment$instrument %in% c("aurora", "lsr_fortessa")) {
-    auroraPreprocess(sample)
-  } else if (experiment$instrument == "citeseq") {
-    citeseqPreprocess(sample)
-  } else {
-    stop("unknown sample instrument")
-  }
-}

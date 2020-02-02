@@ -56,9 +56,10 @@ importCiteseqChannels <- function(filename) {
 #'
 #' Quality control, cleaning, and transformation for citeseq sample.
 #'
+#' @param sample An Astrolabe sample.
 #' @param cofactor Cofactor for asinh transformation.
-#' @inheritParams preprocess
 #' @return Sample after the above steps are done.
+#' @export
 citeseqPreprocess <- function(sample, cofactor = 5) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 

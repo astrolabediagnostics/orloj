@@ -69,9 +69,10 @@ auroraTransformChannels <- function(flow_frame) {
 #' Transformation of Aurora data should be done before converting the flow frame
 #' into an Astrolabe sample.
 #'
-#' @inheritParams preprocess
+#' @param sample An Astrolabe sample.
 #' @seealso \code{\link{auroraTransformChannels}}
 #' @return Sample after the above steps are done.
+#' @export
 auroraPreprocess <- function(sample) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 

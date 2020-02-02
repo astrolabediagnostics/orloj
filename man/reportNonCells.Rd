@@ -4,7 +4,7 @@
 \alias{reportNonCells}
 \title{Non-cells report.}
 \usage{
-reportNonCells(sample, max_n = Inf)
+reportNonCells(sample, max_n = 1e+06)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}

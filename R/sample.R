@@ -183,6 +183,9 @@ fcsExprs <- function(sample,
         debris_labels <- c(debris_labels, "Root_unassigned")
       }
     }
+    if (!is.null(sample$subsets_are_debris)) {
+      debris_labels <- c(debris_labels, sample$subsets_are_debris)
+    }
     exprs$Debris[exprs$Assignment %in% debris_labels] <- TRUE
     
     # Update Assignment to AstrolabeBead/Debris/Dead values.
