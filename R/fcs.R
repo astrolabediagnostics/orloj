@@ -198,6 +198,8 @@ identifyFcsInstrument <- function(flow_frame) {
     return("aurora")
   } else if (grepl("lsrfortessa", cyt)) {
     return("lsr_fortessa")
+  } else if (grepl("lsrii", cyt)) {
+    return("lsr_ii")
   } else {
     return("unknown")
   }
