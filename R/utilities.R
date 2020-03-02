@@ -67,10 +67,12 @@ filenameify <- function(str, extension = NULL) {
   str <- gsub("\\+$", "pos", str)
   str <- gsub("\\+ ", "pos ", str)
   str <- gsub("\\+)", "pos)", str)
+  str <- gsub("\\+_", "pos_", str)
 
   str <- gsub("\\-$", "neg", str)
   str <- gsub("\\- ", "neg ", str)
   str <- gsub("\\-)", "neg)", str)
+  str <- gsub("\\-_", "neg_", str)
 
   str <- gsub("\\)", "", str)
   str <- gsub("\\(", "", str)
