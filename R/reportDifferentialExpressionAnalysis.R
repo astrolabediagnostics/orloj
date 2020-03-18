@@ -152,7 +152,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
     )
   # Transpose data to match heat map (rows are cell subsets).
   channel_names <- fc_heat_map$data$ChannelName
-  fc_heat_map$data <- t(fc_heat_map$data[, -1])
+  fc_heat_map$data <- t(fc_heat_map$data[, -1, drop = FALSE])
   colnames(fc_heat_map$data) <- channel_names
   fc_heat_map$data <- fc_heat_map$data[rev(cell_subset_order), ]
   fc_heat_map
@@ -221,8 +221,9 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
     # Transpose data to match heat map (rows are samples) and change sample
     # IDs to sample names.
     cell_subsets <- channel_heat_map$data$CellSubset
-    channel_heat_map$data <- t(channel_heat_map$data[, -1])
-    channel_heat_map$data <- channel_heat_map$data[rev(sample_order), ]
+    channel_heat_map$data <- t(channel_heat_map$data[, -1, drop = FALSE])
+    channel_heat_map$data <-
+      channel_heat_map$data[rev(sample_order), , drop = FALSE]
     colnames(channel_heat_map$data) <- cell_subsets
     rownames(channel_heat_map$data) <- rev(sample_names)
     
