@@ -40,17 +40,17 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
                                       group_feature_label))$FeatureName
   }
 
-  analyses <-
+  levels <-
     names(differential_abundance_analysis$differential_abundance_analysis)
-  lapply(nameVector(analyses), function(analysis) {
+  lapply(nameVector(levels), function(level) {
     cell_counts <-
-      subset(aggregate_statistics$subset_cell_counts, Parent == analysis)
+      subset(aggregate_statistics$subset_cell_counts, Parent == level)
     group_feature_label <- differential_abundance_analysis$group_feature_label
     daa <-
-      differential_abundance_analysis$differential_abundance_analysis[[analysis]]
+      differential_abundance_analysis$differential_abundance_analysis[[level]]
 
     # Get DAA in export-ready format.
-    export_daa <- differentialAbundanceAnalysis(experiment, level = analysis)
+    export_daa <- differentialAbundanceAnalysis(experiment, level = level)
 
     # Join data with sample name and sample features.
     figure_data <- cell_counts %>%
@@ -69,14 +69,12 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
       feature_r_name <-
         paste0(
           "feature_",
-          dplyr::filter(features, FeatureName == feature_name)$FeatureId
+          subset(features, FeatureName == feature_name)$FeatureId
         )
 
       # Get analysis results for this feature.
       feature_top_tags <- daa[[feature_r_name]]$table
-      if (is.null(feature_top_tags)) {
-        return(feature_top_tags);
-      }
+      if (is.null(feature_top_tags)) return(feature_top_tags)
       feature_top_tags <-
         tibble::rownames_to_column(feature_top_tags, "CellSubset")
 
@@ -91,7 +89,7 @@ reportDifferentialAbundanceAnalysis <- function(experiment) {
       }
       # Calculate symmetric X limit for volcano plot.
       volcano_x <- feature_top_tags[[volcano_plot_x]]
-      volcano_xlim <- volcano_x[which.max(abs(volcano_x))]
+      volcano_xlim <- abs(volcano_x[which.max(abs(volcano_x))])
       volcano_xlim <- ceiling(volcano_xlim / 0.25) * 0.25
       volcano_plt_list <-
         plotScatterPlot(feature_top_tags,

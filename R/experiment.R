@@ -203,10 +203,15 @@ differentialAbundanceAnalysis <- function(experiment,
   
   # Find feature values.
   feature_values <- lapply(nameVector(names(daa)), function(feature_name) {
-    values <- unique(experiment$sample_features[[feature_name]])
-    values <- setdiff(values, feature_na)
-    values
+    if(!is.factor(experiment$sample_features[[feature_name]])) {
+      # Reverse compatibility: Past versions of Astrolabe used character for
+      # sample feature values.
+      setdiff(unique(experiment$sample_features[[feature_name]]), feature_na)
+    }
+    
+    levels(experiment$sample_features[[feature_name]])
   })
+
   # Convert feature IDs to names.
   if (convert_ids) {
     m <-
@@ -237,7 +242,7 @@ differentialAbundanceAnalysis <- function(experiment,
           "logFC",
           "PValue",
           "FDR",
-          paste0("median_", feature_values[[feature_name]]))
+          feature_values[[feature_name]])
       
       tab[, cols]
     }
