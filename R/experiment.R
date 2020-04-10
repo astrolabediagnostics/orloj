@@ -206,10 +206,11 @@ differentialAbundanceAnalysis <- function(experiment,
     if(!is.factor(experiment$sample_features[[feature_name]])) {
       # Reverse compatibility: Past versions of Astrolabe used character for
       # sample feature values.
-      setdiff(unique(experiment$sample_features[[feature_name]]), feature_na)
+      values <- experiment$sample_features[[feature_name]]
+    } else {
+      values <- levels(experiment$sample_features[[feature_name]])
     }
-    
-    levels(experiment$sample_features[[feature_name]])
+    values <- setdiff(values, feature_na)
   })
 
   # Convert feature IDs to names.
