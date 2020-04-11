@@ -237,6 +237,15 @@ differentialAbundanceAnalysis <- function(experiment,
         max_log_fc <- apply(log_fc, 1, function(v) v[which.max(abs(v))])
         tab$logFC <- max_log_fc
       }
+
+      # Reverse compatibility: Median columns were labeled "median_" in past
+      # versions of Astrolabe.
+      feature_cols_old <- paste0("median_", feature_values[[feature_name]])
+      if (all(feature_cols_old %in% colnames(tab))) {
+        old_indices <- which(colnames(tab) %in% feature_cols_old)
+        colnames(tab)[old_indices] <-
+          gsub("median_", "", colnames(tab)[old_indices])
+      }
       
       cols <-
         c("CellSubset",
