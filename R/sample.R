@@ -159,7 +159,7 @@ fcsExprs <- function(sample,
     }
     # Copy one column at a time.
     for (col_name in colnames(cell_assignments)) {
-      exprs[[col_name]] <- NA
+      exprs[[col_name]] <- as.character(NA)
       exprs[ca_indices, col_name] <- cell_assignments[[col_name]]
     }
     # Update debris based on cell assignment.
