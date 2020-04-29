@@ -4,8 +4,7 @@
 \alias{fcsExprs}
 \title{Get expression data from sample.}
 \usage{
-fcsExprs(sample, keep_beads = FALSE, keep_debris = FALSE,
-  keep_dead = FALSE)
+fcsExprs(sample, keep_beads = FALSE, keep_debris = FALSE, keep_dead = FALSE)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}

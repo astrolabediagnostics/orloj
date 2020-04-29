@@ -287,23 +287,6 @@ experimentDifferentialExpressionAnalysis <- function(experiment,
   })
 }
 
-#' Differential expression analysis value var.
-#'
-#' Return the name of the value variable that was used for differential
-#' expression analysis in this experiment.
-#'
-#' @param experiment An Astrolabe experiment.
-#' @return Value variable.
-#' @export
-experimentDifferentialExpressionAnalysisValueVar <- function(experiment) {
-  value_var <- readRDS(file.path(
-    experiment$analysis_path, "differential_abundance_analysis.RDS"))$value_var
-  # Reverse compatibility: Past versions only used "Mean" as value variable.
-  if (is.null(value_var)) value_var <- "Mean"
-
-  value_var
-}
-
 #' MDS map.
 #'
 #' Return the MDS map for the experiment, for a given level.

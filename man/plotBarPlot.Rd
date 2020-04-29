@@ -4,8 +4,15 @@
 \alias{plotBarPlot}
 \title{Bar plot object.}
 \usage{
-plotBarPlot(data, x, y, fill = NULL, title = NULL,
-  scale_y_labels = NULL, theme = NULL)
+plotBarPlot(
+  data,
+  x,
+  y,
+  fill = NULL,
+  title = NULL,
+  scale_y_labels = NULL,
+  theme = NULL
+)
 }
 \arguments{
 \item{data}{Dataset to use for the plot. If sample, exprs will be used.}

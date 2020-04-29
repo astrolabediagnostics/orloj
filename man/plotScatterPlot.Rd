@@ -4,9 +4,19 @@
 \alias{plotScatterPlot}
 \title{Scatter plot object.}
 \usage{
-plotScatterPlot(data, x, y, color = NULL, alpha = 0.5, size = 1,
-  xlim = NULL, ylim = NULL, title = NULL, theme = NULL,
-  force_data = FALSE)
+plotScatterPlot(
+  data,
+  x,
+  y,
+  color = NULL,
+  alpha = 0.5,
+  size = 1,
+  xlim = NULL,
+  ylim = NULL,
+  title = NULL,
+  theme = NULL,
+  force_data = FALSE
+)
 }
 \arguments{
 \item{data}{Dataset to use for the plot. If sample, exprs will be used.}

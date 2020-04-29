@@ -4,8 +4,11 @@
 \alias{differentialAbundanceAnalysis}
 \title{Differential abundance analysis.}
 \usage{
-differentialAbundanceAnalysis(experiment,
-  level = .chooseLevel(experiment), convert_ids = TRUE)
+differentialAbundanceAnalysis(
+  experiment,
+  level = .chooseLevel(experiment),
+  convert_ids = TRUE
+)
 }
 \arguments{
 \item{experiment}{An Astrolabe experiment.}

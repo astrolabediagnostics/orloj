@@ -21,8 +21,6 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
   
   differential_expression_analysis <-
     experimentDifferentialExpressionAnalysis(experiment)
-  value_var <- 
-    experimentDifferentialExpressionAnalysisValueVar(experiment)
   channel_dens <- .loadChannelDensities(experiment)
   
   # Generate the report for each cell subset level.
@@ -64,26 +62,26 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
         .generateFcHeatMap(kit_name, level, dea, cell_subset_order,
                            legend_min = LEGEND_MIN)
       
-      marker_legend_label <- .getMarkerLegendLabel(experiment, value_var, kit)
+      marker_legend_label <- .getMarkerLegendLabel(experiment, kit)
       dea_long <-
         reshape2::melt(dea,
                        id.vars = c("CellSubset", "ChannelName"),
                        measure.vars = sample_order,
                        variable.name = "SampleId",
-                       value.name = value_var)
+                       value.name = "MarkerStatistic")
       
       # Figures: Heat map of marker intensity across samples for each marker.
       if (verbose) message("\theat map of marker intensity")
       report <- 
         .addMarkerIntensityHeatMap(
-          report, value_var, dea_long, kit, kit_name,
+          report, dea_long, kit, kit_name,
           sample_order, sample_names, marker_legend_label,
           legend_min = LEGEND_MIN)
       
       # Figures: Dot and box plot of marker intensity across samples.
       report <-
         .addMarkerIntensityDotBoxPlots(
-          report, value_var,  kit, kit_name, dea_long, primary_feature_name,
+          report, kit, kit_name, dea_long, primary_feature_name,
           sample_features, cell_subset_order, sample_order, sample_names,
           marker_legend_label, sample_count_max_n = SAMPLE_COUNT_MAX_N)
       
@@ -158,17 +156,17 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
   fc_heat_map
 }
 
-.getMarkerLegendLabel <- function(experiment, value_var, kit) {
+.getMarkerLegendLabel <- function(experiment, kit) {
   # Build the marker legend label that will be used in later figures. The label
   # varies if the kit includes a reference feature.
-  if (is.na(kit$ReferenceFeatureId)) return(value_var)
+  if (is.na(kit$ReferenceFeatureId)) return(kit$MarkerStatistic)
   
   reference_feature_id <- 
     gsub("feature_", "", kit$ReferenceFeatureId, fixed = TRUE)
   reference_feature_name <-
     subset(experiment$features,
            FeatureId == reference_feature_id)$FeatureName
-  paste0(value_var, " - (", reference_feature_name, ", ", 
+  paste0(kit$MarkerStatistic, " - (", reference_feature_name, ", ", 
          kit$ReferenceFeatureBaselineValue, ")")
 }
 
@@ -182,26 +180,26 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
   }))
 }
 
-.addMarkerIntensityHeatMap <- function(report, value_var,
+.addMarkerIntensityHeatMap <- function(report,
                                        dea_long, kit, kit_name,
                                        sample_order, sample_names,
                                        marker_legend_label, legend_min = 1) {
   # Add the marker intensity heat maps to the report.
   for (channel_name in kit$ChannelNames[[1]]) {
     channel_dea_long <- subset(dea_long, ChannelName == channel_name)
-    channel_dea_long[[marker_legend_label]] <- channel_dea_long[[value_var]]
+    channel_dea_long[[marker_legend_label]] <- channel_dea_long$MarkerStatistic
     
     # Make the color coding friendlier for humans to look at by rounding and
     # setting reasonable min/max values.
     fill_min <-
-      floor(min(channel_dea_long[[value_var]], na.rm = TRUE))
+      floor(min(channel_dea_long$MarkerStatistic, na.rm = TRUE))
     # If there's no reference feature, minimum is 0 or close to 0, we don't
     # want to push it lower than that.
     if (!is.na(kit$ReferenceFeatureId)) {
       fill_min <- min(fill_min, -legend_min)
     }
     fill_max <-
-      ceiling(max(channel_dea_long[[value_var]], na.rm = TRUE))
+      ceiling(max(channel_dea_long$MarkerStatistic, na.rm = TRUE))
     fill_max <- max(fill_max, legend_min)
     
     channel_heat_map <- 
@@ -233,7 +231,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
   report
 }
 
-.addMarkerIntensityDotBoxPlots <- function(report, value_var,
+.addMarkerIntensityDotBoxPlots <- function(report,
                                            kit, kit_name,
                                            dea_long, primary_feature_name,
                                            sample_features, cell_subset_order,
@@ -260,7 +258,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
     # Dot plot. Only generate if sample count is l.t.e sample_count_max_n.
     if (nrow(sample_features) <= sample_count_max_n) {
       channel_dot_plot <-
-        ggplot(channel_dea_long, aes_string(x = "SampleId", y = value_var)) +
+        ggplot(channel_dea_long, aes(x = SampleId, y = MarkerStatistic)) +
         geom_point(aes_string(color = kit$PrimaryFeatureId)) +
         scale_x_discrete(limits = sample_order,
                          labels = .shortenSampleNames(sample_names)) +
@@ -280,7 +278,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
     set.seed(12345)
     channel_box_plot <- 
       ggplot(channel_dea_long,
-             aes_string(x = kit$PrimaryFeatureId, y = value_var)) +
+             aes_string(x = kit$PrimaryFeatureId, y = "MarkerStatistic")) +
       geom_boxplot(outlier.shape = NA) +
       geom_jitter(aes_string(color = kit$PrimaryFeatureId),
                   width = 0.15, alpha = 0.4) +

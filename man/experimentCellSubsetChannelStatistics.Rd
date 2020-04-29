@@ -4,8 +4,10 @@
 \alias{experimentCellSubsetChannelStatistics}
 \title{Experiment cell subset channel statistics.}
 \usage{
-experimentCellSubsetChannelStatistics(experiment,
-  level = .chooseLevel(experiment))
+experimentCellSubsetChannelStatistics(
+  experiment,
+  level = .chooseLevel(experiment)
+)
 }
 \arguments{
 \item{experiment}{An Astrolabe experiment.}

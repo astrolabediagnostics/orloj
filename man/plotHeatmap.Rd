@@ -4,9 +4,18 @@
 \alias{plotHeatmap}
 \title{Heat map object.}
 \usage{
-plotHeatmap(hm, x, y, value, type = NULL, title = NULL,
-  x_axis_order = NULL, y_axis_order = NULL, fill_limits = NULL,
-  theme = NULL)
+plotHeatmap(
+  hm,
+  x,
+  y,
+  value,
+  type = NULL,
+  title = NULL,
+  x_axis_order = NULL,
+  y_axis_order = NULL,
+  fill_limits = NULL,
+  theme = NULL
+)
 }
 \arguments{
 \item{hm}{Data frame with heatmap data.}

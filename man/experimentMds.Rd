@@ -4,8 +4,7 @@
 \alias{experimentMds}
 \title{MDS map.}
 \usage{
-experimentMds(experiment, level = .chooseLevel(experiment),
-  convert_ids = TRUE)
+experimentMds(experiment, level = .chooseLevel(experiment), convert_ids = TRUE)
 }
 \arguments{
 \item{experiment}{An Astrolabe experiment.}

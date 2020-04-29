@@ -4,9 +4,18 @@
 \alias{plotHeatmapAggregate}
 \title{Aggregate data and generate a heat map object.}
 \usage{
-plotHeatmapAggregate(data, x, y, value, func = median, type = NULL,
-  title = NULL, x_axis_order = NULL, y_axis_order = NULL,
-  theme = NULL)
+plotHeatmapAggregate(
+  data,
+  x,
+  y,
+  value,
+  func = median,
+  type = NULL,
+  title = NULL,
+  x_axis_order = NULL,
+  y_axis_order = NULL,
+  theme = NULL
+)
 }
 \arguments{
 \item{data}{Data frame to be aggregated and plotted.}
