@@ -124,6 +124,12 @@ fcsExprs <- function(sample,
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
   
   exprs <- sample$exprs
+
+  # Remove any columns from previous Astrolabe runs.
+  if (!is.null(sample$cell_subsets)) {
+    existing_cols <- intersect(colnames(exprs), colnames(sample$cell_subsets))
+    exprs[, existing_cols] <- NULL
+  }
   
   exprs$AstrolabeBead <- FALSE
   exprs$Dead          <- FALSE
