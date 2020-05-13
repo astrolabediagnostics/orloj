@@ -4,9 +4,11 @@
 #' over multiple samples, sample features, and cell subsets.
 #'
 #' @param experiment An Astrolabe experiment.
+#' @param ridge_plots Whether ridge plots should be exported.
 #' @import ggplot2
 #' @export
-reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
+reportDifferentialExpressionAnalysis <- function(experiment, ridge_plots = FALSE,
+                                                 verbose = FALSE) {
   # Value for NA feature value. Samples with this value should not be included
   # in the analysis.
   FEATURE_NA <- "__NA__"
@@ -21,7 +23,7 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
   
   differential_expression_analysis <-
     experimentDifferentialExpressionAnalysis(experiment)
-  channel_dens <- .loadChannelDensities(experiment)
+  if (ridge_plots) channel_dens <- .loadChannelDensities(experiment)
   
   # Generate the report for each cell subset level.
   lapply(nameVector(names(differential_expression_analysis)), function(level) {
@@ -86,15 +88,17 @@ reportDifferentialExpressionAnalysis <- function(experiment, verbose = FALSE) {
           marker_legend_label, sample_count_max_n = SAMPLE_COUNT_MAX_N)
       
       # Figures: Ridge plots of marker intensity distribution across samples.
-      if (verbose) message("\tridge plots")
-      reference_means <- 
-        differential_expression_analysis[[level]][[kit_name]]$reference_means
-      report <-
-        .addMarkerIntensityRidgePlots(
-          report, experiment, level, channel_dens, kit_name, dea,
-          reference_means, sample_order,
-          sample_count_max_n = SAMPLE_COUNT_MAX_N,
-          ridge_min_maxfc = RIDGE_MIN_MAXFC, ridge_min_n = RIDGE_MIN_N)
+      if (ridge_plots) {
+        if (verbose) message("\tridge plots")
+        reference_means <- 
+          differential_expression_analysis[[level]][[kit_name]]$reference_means
+        report <-
+          .addMarkerIntensityRidgePlots(
+            report, experiment, level, channel_dens, kit_name, dea,
+            reference_means, sample_order,
+            sample_count_max_n = SAMPLE_COUNT_MAX_N,
+            ridge_min_maxfc = RIDGE_MIN_MAXFC, ridge_min_n = RIDGE_MIN_N)
+      }
     }
     
     report

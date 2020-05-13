@@ -4,10 +4,16 @@
 \alias{reportDifferentialExpressionAnalysis}
 \title{Differential expression analysis report.}
 \usage{
-reportDifferentialExpressionAnalysis(experiment, verbose = FALSE)
+reportDifferentialExpressionAnalysis(
+  experiment,
+  ridge_plots = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{experiment}{An Astrolabe experiment.}
+
+\item{ridge_plots}{Whether ridge plots should be exported.}
 }
 \description{
 Generate plots and CSV files that report on differential expression analysis
