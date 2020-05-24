@@ -4,7 +4,15 @@
 \alias{plotBoxPlot}
 \title{Box plot object.}
 \usage{
-plotBoxPlot(data, x, y, title = NULL, scale_y_labels = NULL, theme = NULL)
+plotBoxPlot(
+  data,
+  x,
+  y,
+  title = NULL,
+  subtitle = NULL,
+  scale_y_labels = NULL,
+  theme = NULL
+)
 }
 \arguments{
 \item{data}{Dataset to use for the plot. If sample, exprs will be used.}
@@ -12,6 +20,8 @@ plotBoxPlot(data, x, y, title = NULL, scale_y_labels = NULL, theme = NULL)
 \item{x, y}{Column names for X-axis and Y-axis, respectively.}
 
 \item{title}{Plot title.}
+
+\item{subtitle}{Plot subtitle.}
 
 \item{scale_y_labels}{Scaling function for Y-axis tick labels.}
 

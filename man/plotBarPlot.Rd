@@ -10,6 +10,7 @@ plotBarPlot(
   y,
   fill = NULL,
   title = NULL,
+  subtitle = NULL,
   scale_y_labels = NULL,
   theme = NULL
 )
@@ -21,7 +22,7 @@ plotBarPlot(
 
 \item{fill}{Column name for bar fill.}
 
-\item{title}{Plot title.}
+\item{title}{Plot subtitle.}
 
 \item{scale_y_labels}{Scaling function for Y-axis tick labels.}
 

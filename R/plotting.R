@@ -162,6 +162,7 @@ exportReport <- function(dir,
 #' @param x,y Column names for the X-axis and Y-axis, respectively.
 #' @param fill Column name for bar fill.
 #' @param title Plot title.
+#' @param title Plot subtitle.
 #' @param scale_y_labels Scaling function for Y-axis tick labels.
 #' @param theme Modifications to the default ggplot theme.
 #' @return An orloj plot list with the plot object and any other parameters that
@@ -173,6 +174,7 @@ plotBarPlot <- function(data,
                         y,
                         fill = NULL,
                         title = NULL,
+                        subtitle = NULL,
                         scale_y_labels = NULL,
                         theme = NULL) {
   if (isSample(data)) {
@@ -197,6 +199,7 @@ plotBarPlot <- function(data,
           legend.position = "bottom")
 
   if (!is.null(title)) plt <- plt + labs(title = title)
+  if (!is.null(subtitle)) plt <- plt + labs(subtitle = subtitle)
   if (!is.null(scale_y_labels)) {
     plt <- plt + scale_y_continuous(labels = scale_y_labels)
   }
@@ -205,9 +208,12 @@ plotBarPlot <- function(data,
   # Set up width, height, data.
   width <-
     15 + # Y-axis title
-    15 * max(nchar(as.character(data[[y]]))) + # Longest Y-axis label
+    30 + # Y-axis label
     40 * length(unique(data[[x]])) # Number of X-axis values
-  height <- 600
+  height <-
+    400 + # Base height
+    7 * max(nchar(as.character(data[[x]]))) # Longest X-axis label
+
   if (is.null(fill)) {
     data <- data[, c(x, y)]
   } else {
@@ -317,6 +323,7 @@ plotScatterPlot <- function(data,
 #' @param data Dataset to use for the plot. If sample, exprs will be used.
 #' @param x,y Column names for X-axis and Y-axis, respectively.
 #' @param title Plot title.
+#' @param subtitle Plot subtitle.
 #' @param scale_y_labels Scaling function for Y-axis tick labels.
 #' @param theme Modifications to the default ggplot theme.
 #' @return An orloj plot list with the plot object and any other parameters that
@@ -328,6 +335,7 @@ plotBoxPlot <- function(data,
                         x,
                         y,
                         title = NULL,
+                        subtitle = NULL,
                         scale_y_labels = NULL,
                         theme = NULL) {
   if (isSample(data)) {
@@ -341,9 +349,11 @@ plotBoxPlot <- function(data,
   plt <-
     ggplot(data, aes_string(x = x_bt, y = y_bt)) +
     geom_boxplot() +
-    theme_linedraw()
+    theme_linedraw() +
+    theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.4))
 
   if (!is.null(title)) plt <- plt + labs(title = title)
+  if (!is.null(subtitle)) plt <- plt + labs(subtitle = subtitle)
   if (!is.null(scale_y_labels)) {
     plt <- plt + scale_y_continuous(labels = scale_y_labels)
   }
@@ -352,9 +362,11 @@ plotBoxPlot <- function(data,
   # Set up width, height, data.
   width <-
     15 + # Y-axis title
-    15 * max(nchar(as.character(data[[y]]))) + # Longest Y-axis label
+    30 + # Y-axis label
     40 * length(unique(data[[x]])) # Number of X-axis values
-  height <- 600
+  height <-
+    400 + # Base height
+    7 * max(nchar(as.character(data[[x]]))) # Longest X-axis label
   data <- data[, c(x, y)]
 
   list(
