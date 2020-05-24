@@ -7,7 +7,8 @@
 #' @param ridge_plots Whether ridge plots should be exported.
 #' @import ggplot2
 #' @export
-reportDifferentialExpressionAnalysis <- function(experiment, ridge_plots = FALSE,
+reportDifferentialExpressionAnalysis <- function(experiment,
+                                                 ridge_plots = FALSE,
                                                  verbose = FALSE) {
   # Value for NA feature value. Samples with this value should not be included
   # in the analysis.
@@ -73,7 +74,6 @@ reportDifferentialExpressionAnalysis <- function(experiment, ridge_plots = FALSE
                        value.name = "MarkerStatistic")
       
       # Figures: Heat map of marker intensity across samples for each marker.
-      if (verbose) message("\theat map of marker intensity")
       report <- 
         .addMarkerIntensityHeatMap(
           report, dea_long, kit, kit_name,
@@ -235,6 +235,37 @@ reportDifferentialExpressionAnalysis <- function(experiment, ridge_plots = FALSE
   report
 }
 
+.calculateDotBoxPlotParams <- function(name, values, cell_subset_order) {
+  # Decide on the parameters for a dot or box plot. These include the width,
+  # height, number of facet columns, and color scale.
+  # box plot, based on the number of values presented.
+  if (is.character(values)) {
+    v <- unique(values)
+  } else if (is.factor(values)) {
+    v <- levels(values)
+  } else stop("values is not character or factor")
+  n_chars <- max(nchar(v))
+  n_values <- length(v)
+  
+  ncol <- 4
+  width <- 900
+  if (length(v) > 8) width <- 1800
+  
+  height <-
+    10 * ceiling(n_values / 5) +  # Legend height
+    ceiling(length(cell_subset_order) / ncol) * # Number of rows
+    (300 + 4 * n_chars) # Height per row
+  
+  scale <- .chooseScaleDiscrete("color", name, values)
+  
+  return(list(
+    ncol = ncol,
+    width = width,
+    height = height,
+    scale = scale
+  ))
+}
+
 .addMarkerIntensityDotBoxPlots <- function(report,
                                            kit, kit_name,
                                            dea_long, primary_feature_name,
@@ -244,10 +275,16 @@ reportDifferentialExpressionAnalysis <- function(experiment, ridge_plots = FALSE
                                            sample_count_max_n = 50) {
   # Add the marker intensity dot plots and box plots to the report.
   
-  # Calculate figure size.
-  width <- 900
-  height <- ceiling(length(cell_subset_order) / 4) * 2.5 * 100
-  
+  # Calculate plot parameters based on number of values.
+  dot_plot_params <-
+    .calculateDotBoxPlotParams(name = primary_feature_name,
+                               sample_features$SampleId,
+                               cell_subset_order)
+  box_plot_params <-
+    .calculateDotBoxPlotParams(name = primary_feature_name,
+                               sample_features[[kit$PrimaryFeatureId]],
+                               cell_subset_order)
+
   for (channel_name in kit$ChannelNames[[1]]) {
     # Get DEA data for this channel and join with primary feature.
     channel_dea_long <- subset(dea_long, ChannelName == channel_name)
@@ -266,8 +303,8 @@ reportDifferentialExpressionAnalysis <- function(experiment, ridge_plots = FALSE
         geom_point(aes_string(color = kit$PrimaryFeatureId)) +
         scale_x_discrete(limits = sample_order,
                          labels = .shortenSampleNames(sample_names)) +
-        scale_color_brewer(name = primary_feature_name, palette = "Dark2") +
-        facet_wrap(~ CellSubset, scales = "free", ncol = 4,
+        dot_plot_params$scale +
+        facet_wrap(~ CellSubset, scales = "free", ncol = dot_plot_params$ncol,
                    labeller = label_wrap_gen()) +
         labs(y = paste0(channel_name, " ", marker_legend_label)) +
         theme_linedraw() +
@@ -275,7 +312,11 @@ reportDifferentialExpressionAnalysis <- function(experiment, ridge_plots = FALSE
               axis.title.x = element_blank(),
               legend.position = "top")
       report[[kit_name]][[paste0("dot_plot.", channel_name)]] <-
-        list(plt = channel_dot_plot, width = width, height = height)
+        list(
+          plt = channel_dot_plot,
+          width = dot_plot_params$width,
+          height = dot_plot_params$height
+        )
     }
     
     # Box plot.
@@ -286,15 +327,22 @@ reportDifferentialExpressionAnalysis <- function(experiment, ridge_plots = FALSE
       geom_boxplot(outlier.shape = NA) +
       geom_jitter(aes_string(color = kit$PrimaryFeatureId),
                   width = 0.15, alpha = 0.4) +
-      scale_color_brewer(name = primary_feature_name, palette = "Dark2") +
-      facet_wrap(~ CellSubset, scales = "free", ncol = 4,
+      box_plot_params$scale +
+      facet_wrap(~ CellSubset, scales = "free", ncol = box_plot_params$ncol,
                  labeller = label_wrap_gen()) +
       labs(y = paste0(channel_name, " ", marker_legend_label)) +
       theme_linedraw() +
-      theme(axis.title.x = element_blank(),
-            legend.position = "top")
+      theme(
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.3),
+        legend.position = "top"
+      )
     report[[kit_name]][[paste0("box_plot.", channel_name)]] <-
-      list(plt = channel_box_plot, width = width, height = height)
+      list(
+        plt = channel_box_plot,
+        width = box_plot_params$width,
+        height = box_plot_params$height
+      )
   }
   
   report

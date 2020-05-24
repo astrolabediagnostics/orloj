@@ -1,6 +1,8 @@
 # plotting.R
 # Functions for plotting various figures of cytometry data and its analysis.
 
+
+# Export Functions ------------------------------------------------------------
 #' Export an orloj plot list.
 #'
 #' Exports an orloj plot list, applying any of the parameters that it includes.
@@ -118,6 +120,40 @@ exportReport <- function(dir,
   }
 }
 
+
+# Parameter Selection ---------------------------------------------------------
+.chooseScaleDiscrete <- function(aesthetic, name, v) {
+  # Return a discrete ggplot scale of a given type. Choose the palette based
+  # on the number of levels in v.
+  if (!(aesthetic %in% c("color", "fill"))) {
+    stop("aesthetic is not color or fill")
+  }
+
+  if (is.character(v)) {
+    n_values <- length(unique(v))
+  } else if (is.factor(v)) {
+    n_values <- length(levels(v))
+  } else stop("values is not character or factor")
+
+  if (aesthetic == "color") {
+    if (n_values <= 8) {
+      return(scale_color_brewer(name = name, palette = "Dark2"))
+    } else {
+      return(viridis::scale_color_viridis(name = name, discrete = TRUE))
+    }
+  }
+
+  if (aesthetic == "fill") {
+    if (n_values <= 8) {
+      return(scale_fill_brewer(name = name, palette = "Dark2"))
+    } else {
+      return(viridis::scale_fill_viridis(name = name, discrete = TRUE))
+    }
+  }
+}
+
+
+# Plotting Functions ----------------------------------------------------------
 #' Bar plot object.
 #'
 #' Generates a bar plot (using geom_col) ggplot object.
