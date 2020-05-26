@@ -6,6 +6,7 @@
 \usage{
 reportDifferentialExpressionAnalysis(
   experiment,
+  kit_id,
   ridge_plots = FALSE,
   verbose = FALSE
 )
@@ -13,9 +14,11 @@ reportDifferentialExpressionAnalysis(
 \arguments{
 \item{experiment}{An Astrolabe experiment.}
 
+\item{kit_id}{DE analysis kit ID.}
+
 \item{ridge_plots}{Whether ridge plots should be exported.}
 }
 \description{
 Generate plots and CSV files that report on differential expression analysis
-over multiple samples, sample features, and cell subsets.
+for a single kit.
 }

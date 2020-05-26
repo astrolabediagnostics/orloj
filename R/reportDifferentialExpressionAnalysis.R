@@ -1,15 +1,20 @@
 #' Differential expression analysis report.
 #'
 #' Generate plots and CSV files that report on differential expression analysis
-#' over multiple samples, sample features, and cell subsets.
+#' for a single kit.
 #'
 #' @param experiment An Astrolabe experiment.
+#' @param kit_id DE analysis kit ID.
 #' @param ridge_plots Whether ridge plots should be exported.
 #' @import ggplot2
 #' @export
-reportDifferentialExpressionAnalysis <- function(experiment,
+reportDifferentialExpressionAnalysis <- function(experiment, kit_id,
                                                  ridge_plots = FALSE,
                                                  verbose = FALSE) {
+  if (!(kit_id %in% experiment$de_analysis_kits$Id)) {
+    stop("experiment does not have DE analysis kit with given ID")
+  }
+
   # Value for NA feature value. Samples with this value should not be included
   # in the analysis.
   FEATURE_NA <- "__NA__"
@@ -25,80 +30,72 @@ reportDifferentialExpressionAnalysis <- function(experiment,
   differential_expression_analysis <-
     experimentDifferentialExpressionAnalysis(experiment)
   if (ridge_plots) channel_dens <- .loadChannelDensities(experiment)
-  
+
+  # Get kit and required parameters, include sample features and sample order.
+  kit <- subset(experiment$de_analysis_kits, Id == kit_id)
+  kit_name <- kit$Name
+  primary_feature_name <-
+    subset(experiment$features,
+           FeatureId == gsub("feature_", "", kit$PrimaryFeatureId))$FeatureName
+  sample_features <- experiment$sample_features
+  sample_features$Primary <- sample_features[[kit$PrimaryFeatureId]]
+  sample_features <- subset(sample_features, Primary != FEATURE_NA)
+  sample_features$Primary <- 
+    relevel(sample_features$Primary, ref = kit$PrimaryFeatureBaselineValue)
+  sample_order <- sample_features$SampleId[order(sample_features$Primary)]
+  sample_names <- 
+    experiment$samples$Name[match(sample_order, experiment$samples$SampleId)]
+
   # Generate the report for each cell subset level.
   lapply(nameVector(names(differential_expression_analysis)), function(level) {
     if (verbose) message(level)
-    level_dea <- differential_expression_analysis[[level]]
     report <- list()
+
+    dea <- differential_expression_analysis[[level]][[kit_name]]$dea
+    cell_subset_order <- rev(gtools::mixedsort(unique(dea$CellSubset)))
+      
+    # Spreadsheet: DE analysis results, formatted nicely.
+    report[[kit_name]] <-
+      .generateDeResultsSpreadsheet(dea, sample_order, sample_names)
     
-    # Report on each differential analysis kit.
-    for (kit_name in names(level_dea)) {
-      if (verbose) message(paste0("\t", kit_name))
-      kit <- subset(experiment$de_analysis_kits, Name == kit_name)
-      primary_feature_name <-
-        subset(experiment$features,
-               FeatureId == gsub("feature_", "",
-                                 kit$PrimaryFeatureId))$FeatureName
-      dea <- differential_expression_analysis[[level]][[kit_name]]$dea
-      
-      # Get sample features for this kit and decide on sample order (sort by
-      # primary and make sure that baseline is first).
-      cell_subset_order <- rev(gtools::mixedsort(unique(dea$CellSubset)))
-      sample_features <- experiment$sample_features
-      sample_features$Primary <- sample_features[[kit$PrimaryFeatureId]]
-      sample_features <- subset(sample_features, Primary != FEATURE_NA)
-      sample_features$Primary <- factor(sample_features$Primary)
-      sample_features$Primary <- 
-        relevel(sample_features$Primary, ref = kit$PrimaryFeatureBaselineValue)
-      sample_order <- sample_features$SampleId[order(sample_features$Primary)]
-      sample_names <- 
-        experiment$samples$Name[match(sample_order,
-                                      experiment$samples$SampleId)]
-      
-      # Spreadsheet: DE analysis results, formatted nicely.
-      report[[kit_name]] <-
-        .generateDeResultsSpreadsheet(dea, sample_order, sample_names)
-      
-      # Figure: Heat map of maximum fold changes.
-      report[[paste0(kit_name, "_fold_change")]] <-
-        .generateFcHeatMap(kit_name, level, dea, cell_subset_order,
-                           legend_min = LEGEND_MIN)
-      
-      marker_legend_label <- .getMarkerLegendLabel(experiment, kit)
-      dea_long <-
-        reshape2::melt(dea,
-                       id.vars = c("CellSubset", "ChannelName"),
-                       measure.vars = sample_order,
-                       variable.name = "SampleId",
-                       value.name = "MarkerStatistic")
-      
-      # Figures: Heat map of marker intensity across samples for each marker.
-      report <- 
-        .addMarkerIntensityHeatMap(
-          report, dea_long, kit, kit_name,
-          sample_order, sample_names, marker_legend_label,
-          legend_min = LEGEND_MIN)
-      
-      # Figures: Dot and box plot of marker intensity across samples.
+    # Figure: Heat map of maximum fold changes.
+    report[[paste0(kit_name, "_fold_change")]] <-
+      .generateFcHeatMap(kit_name, level, dea, cell_subset_order,
+                         legend_min = LEGEND_MIN)
+    
+    marker_legend_label <- .getMarkerLegendLabel(experiment, kit)
+    dea_long <-
+      reshape2::melt(dea,
+                     id.vars = c("CellSubset", "ChannelName"),
+                     measure.vars = sample_order,
+                     variable.name = "SampleId",
+                     value.name = "MarkerStatistic")
+    
+    # Figures: Heat map of marker intensity across samples for each marker.
+    report <- 
+      .addMarkerIntensityHeatMap(
+        report, dea_long, kit, kit_name,
+        sample_order, sample_names, marker_legend_label,
+        legend_min = LEGEND_MIN)
+    
+    # Figures: Dot and box plot of marker intensity across samples.
+    report <-
+      .addMarkerIntensityDotBoxPlots(
+        report, kit, kit_name, dea_long, primary_feature_name,
+        sample_features, cell_subset_order, sample_order, sample_names,
+        marker_legend_label, sample_count_max_n = SAMPLE_COUNT_MAX_N)
+    
+    # Figures: Ridge plots of marker intensity distribution across samples.
+    if (ridge_plots) {
+      if (verbose) message("\tridge plots")
+      reference_means <- 
+        differential_expression_analysis[[level]][[kit_name]]$reference_means
       report <-
-        .addMarkerIntensityDotBoxPlots(
-          report, kit, kit_name, dea_long, primary_feature_name,
-          sample_features, cell_subset_order, sample_order, sample_names,
-          marker_legend_label, sample_count_max_n = SAMPLE_COUNT_MAX_N)
-      
-      # Figures: Ridge plots of marker intensity distribution across samples.
-      if (ridge_plots) {
-        if (verbose) message("\tridge plots")
-        reference_means <- 
-          differential_expression_analysis[[level]][[kit_name]]$reference_means
-        report <-
-          .addMarkerIntensityRidgePlots(
-            report, experiment, level, channel_dens, kit_name, dea,
-            reference_means, sample_order,
-            sample_count_max_n = SAMPLE_COUNT_MAX_N,
-            ridge_min_maxfc = RIDGE_MIN_MAXFC, ridge_min_n = RIDGE_MIN_N)
-      }
+        .addMarkerIntensityRidgePlots(
+          report, experiment, level, channel_dens, kit_name, dea,
+          reference_means, sample_order,
+          sample_count_max_n = SAMPLE_COUNT_MAX_N,
+          ridge_min_maxfc = RIDGE_MIN_MAXFC, ridge_min_n = RIDGE_MIN_N)
     }
     
     report
