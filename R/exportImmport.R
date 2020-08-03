@@ -69,7 +69,7 @@ exportImmport <- function(file_path, experiment, sample_id) {
 .calculateCountPercent <- function(exprs, value_col, unit_col) {
   stats <- exprs %>%
     dplyr::group_by(Profiling) %>%
-    dplyr::summarize(Count = n()) %>%
+    dplyr::summarize(Count = dplyr::n()) %>%
     dplyr::mutate(Percent = Count / sum(Count) * 100)
   stats <- stats %>%
     reshape2::melt(id.vars = "Profiling",
@@ -158,7 +158,8 @@ exportImmport <- function(file_path, experiment, sample_id) {
                                        pop_name_reported_col,
                                        gating_def_reported_col) {
   # Match Astrolabe assignment to Immport notation. "unassigned" cannot be
-  # matched and keep Astrolabe assignments.
+  # matched and keep Astrolabe assignments. astrolabe_immport_map comes from
+  # sysdata.rda file.
   ass_profiling_map <- unique(exprs[, c("Assignment", "Profiling")])
   ass_profiling_map <-
     dplyr::left_join(ass_profiling_map, astrolabe_immport_map,
