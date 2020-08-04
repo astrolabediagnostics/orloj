@@ -6,15 +6,17 @@ You can install orloj through the R command line. Please make sure to run R in a
 
 1. Install the required Bioconductor packages:
 ```
-source("https://bioconductor.org/biocLite.R")
-biocLite("flowCore")
-biocLite("FlowSOM")
-biocLite("edgeR")
+source("https://bioconductor.org/packages/3.11/bioc/")
+install.packages("BiocManager")
+BiocManager::install("flowCore")
+BiocManager::install("FlowSOM")
+BiocManager::install("edgeR")
 ```
 
-2. Install devtools:
+2. Install devtools and patchwork:
 ```
 install.packages("devtools")
+install.packages('patchwork')
 ```
 
 3. Install orloj from the github repository:
