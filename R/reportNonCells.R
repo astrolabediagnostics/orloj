@@ -196,12 +196,17 @@ reportNonCells <- function(sample, max_n = 1000000) {
   fig_title <- 
     paste0(prettyNum(sum(!exprs$Dead), big.mark = ","), " (",
            round(mean(!exprs$Dead) * 100, 1), "%) live events")
+  # Calculate bandwidth for geom_density2d. This is required in cases where one
+  # of the columns could end with a bandwidth of 0.
+  h <- c(MASS::bandwidth.nrd(df$X), MASS::bandwidth.nrd(df$LiveDead))
+  h[h == 0] <- 0.1
+  # Generate figure.
   plt <-
     ggplot(mapping = aes(x = X, y = LiveDead)) +
     geom_point(data = df, alpha = 0.1, color = "grey70", size = 0) +
     geom_point(data = subset(df, EventType == "Alive"),
                alpha = 0.5, color = "#1C3C44", size = 1) +
-    geom_density2d(data = df, color = "grey20") +
+    geom_density2d(data = df, h = h, color = "grey20") +
     labs(title = fig_title,
          x = sample$live_dead_x_channel_name,
          y = sample$live_dead_channel_name) +
