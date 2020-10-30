@@ -4,10 +4,12 @@
 \alias{flowPreprocess}
 \title{Preprocess flow cytometry sample.}
 \usage{
-flowPreprocess(sample)
+flowPreprocess(sample, cofactor = 1000)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}
+
+\item{cofactor}{Cofactor for asinh transformation.}
 }
 \value{
 Sample after the above steps are done.
