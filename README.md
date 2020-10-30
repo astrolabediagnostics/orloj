@@ -8,7 +8,6 @@ You can install orloj through the R command line. Please make sure to run R in a
 ```
 install.packages("BiocManager")
 BiocManager::install("flowCore")
-BiocManager::install("FlowSOM")
 BiocManager::install("edgeR")
 ```
 

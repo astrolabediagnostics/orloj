@@ -18,7 +18,6 @@ LazyData: true
 Imports:
     dplyr,
     flowCore,
-    FlowSOM,
     ggplot2,
     ggrepel,
     gtools,
@@ -27,4 +26,4 @@ Imports:
     tibble,
     tidyr,
     wrapr
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
