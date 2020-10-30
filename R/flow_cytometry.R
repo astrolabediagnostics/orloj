@@ -55,6 +55,7 @@ auroraTransformChannels <- function(flow_frame) {
   for (col in fsc_ssc_cols) {
     sample$exprs[[col]] <- pmax(0, sample$exprs[[col]])
     v <- sample$exprs[[col]]
+    v[is.na(v)] <- 0
     v <- v[v < quantile(v, 0.99)]
     sample$exprs[[col]] <- sample$exprs[[col]] / max(v) * new_max
   }
