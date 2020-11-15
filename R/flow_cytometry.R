@@ -36,8 +36,7 @@ flowPreprocess <- function(sample, cofactor = 1000) {
     v <- sample$exprs[[col]]
     v[is.na(v)] <- 0 # set missing values to 0.
     v <- pmax(0, v) # set negative values to 0.
-    v <- v[v < quantile(v, 0.99)]
-    sample$exprs[[col]] <- sample$exprs[[col]] / max(v) * new_max
+    sample$exprs[[col]] <- v / quantile(v, 0.99) * new_max
   }
   sample$fsc_ssc_cols <- fsc_ssc_cols
 
