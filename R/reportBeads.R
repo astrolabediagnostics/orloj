@@ -3,14 +3,16 @@
 #' Generates plots that report on the bead detection.
 #'
 #' @param sample An Astrolabe sample.
+#' @param max_n Subsample the data to a maximum of max_n cells.
 #' @return An orloj report list with all of the required objects.
 #' @import patchwork
 #' @export
-reportBeads <- function(sample) {
+reportBeads <- function(sample, max_n = 1000000) {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
 
   exprs <-
     fcsExprs(sample, keep_beads = TRUE, keep_dead = TRUE, keep_debris = TRUE)
+  if (nrow(exprs) > max_n) exprs <- exprs[sample(seq(nrow(exprs)), max_n), ]
   
   # No beads were found, nothing to report.
   if (sum(exprs$AstrolabeBead) == 0) return(NULL)

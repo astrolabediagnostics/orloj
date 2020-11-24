@@ -7,7 +7,8 @@ astrolabe_analyses <- c(
   "subset_profiling_candidates",
   "subset_profiling_assignment",
   "aggregate_statistics",
-  "calculate_qc_metrics"
+  "calculate_qc_metrics",
+  "calculate_marker_thresholds"
 )
 
 #' Load Astrolabe sample.

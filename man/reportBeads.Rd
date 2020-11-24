@@ -4,10 +4,12 @@
 \alias{reportBeads}
 \title{Bead report.}
 \usage{
-reportBeads(sample)
+reportBeads(sample, max_n = 1e+06)
 }
 \arguments{
 \item{sample}{An Astrolabe sample.}
+
+\item{max_n}{Subsample the data to a maximum of max_n cells.}
 }
 \value{
 An orloj report list with all of the required objects.
