@@ -327,11 +327,20 @@ experimentMds <- function(experiment,
   # Add max(fold change) and -log10(FDR) for each feature.
   daa <- differentialAbundanceAnalysis(experiment, level = level, convert_ids)
   for (feature_name in names(daa)) {
-    # Skip features for which we did not run DAA.
-    if (is.null(daa[[feature_name]])) next
+    if (is.null(daa[[feature_name]])) {
+      # If we did not run DAA for a feature, update MDS map with empty values.
+      tab <-
+        data.frame(
+          CellSubset = unique(cell_subset_counts$CellSubset),
+          logFC = 0,
+          FDR = 1
+        )
+    } else {
+      # Ran DAA, take test results.
+      tab <- daa[[feature_name]]
+      tab <- tab[, c("CellSubset", "logFC", "FDR")]
+    }
     
-    tab <- daa[[feature_name]]
-    tab <- tab[, c("CellSubset", "logFC", "FDR")]
     colnames(tab) <-
       c("CellSubset",
         paste0(feature_name, "_logFC"),
