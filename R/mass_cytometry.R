@@ -68,6 +68,7 @@ massTransformMassChannels <- function(sample, cofactor) {
   sample$mass_channel_indices <- mass_channel_indices
 
   sample$trans_function <- function(x) { asinh(x / cofactor) }
+  sample$rev_trans_function <- function(x) { sinh(x) * cofactor }
 
   sample
 }

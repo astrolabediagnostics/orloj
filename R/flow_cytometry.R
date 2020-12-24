@@ -29,6 +29,7 @@ flowPreprocess <- function(sample, cofactor = 1000) {
     asinh(sample$exprs[, channel_indices] / cofactor)
   sample$transformed_channel_indices <- channel_indices
   sample$trans_function <- function(x) { asinh(x / cofactor) }
+  sample$rev_trans_function <- function(x) { sinh(x) * cofactor }
 
   # Rescale FSC/SSC/Time to the range of transformed antibodies.
   fsc_ssc_cols <- grep(fsc_ssc_time_pattern, name)
