@@ -20,7 +20,7 @@ reportNonCells <- function(sample, max_n = 1000000) {
     report <-
       .reportMassCytometryDebrisDoublets(sample, fig_len = fig_len,
                                          max_n = max_n)
-  } else if (sample$instrument %in% c("aurora", "lsr_fortessa")) {
+  } else if (sample$instrument %in% c("aurora", "lsr_fortessa", "flow_cytometry")) {
     report <-
       .reportFlowCytometryDebrisDoublets(sample, fig_len = fig_len,
                                          max_n = max_n)
