@@ -50,7 +50,8 @@ reportMarkerThresholds <- function(sample, max_n = 100000) {
     
     # Generate figure.
     plt <- 
-      ggplot(mapping = aes_string(x = x_axis, y = channel_name)) +
+      ggplot(mapping = aes_string(x = addBackticks(x_axis),
+                                  y = addBackticks(channel_name))) +
       geom_point(data = exprs, alpha = 0.1, color = "grey70", size = 0) +
       geom_point(
         data = exprs[pos_indices, ], alpha = 0.5, color = "#1C3C44", size = 1) +
