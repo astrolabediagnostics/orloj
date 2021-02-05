@@ -325,9 +325,18 @@ experimentMds <- function(experiment,
   mds <- dplyr::left_join(mds, marker_stats, by = "CellSubset")
   
   # Add max(fold change) and -log10(FDR) for each feature.
-  daa <- differentialAbundanceAnalysis(experiment, level = level, convert_ids)
-  for (feature_name in names(daa)) {
-    if (is.null(daa[[feature_name]])) {
+  daa <-
+    differentialAbundanceAnalysis(experiment, level = level,
+                                  convert_ids = FALSE)
+  for (feature_id in experiment$features$FeatureId) {
+    feature_id_long <- paste0("feature_", feature_id)
+    feature_name <- feature_id_long
+    if (convert_ids) {
+      feature_name <-
+        subset(experiment$features, FeatureId == feature_id)$FeatureName
+    }
+
+    if (is.null(daa[[feature_id_long]])) {
       # If we did not run DAA for a feature, update MDS map with empty values.
       tab <-
         data.frame(
@@ -337,10 +346,10 @@ experimentMds <- function(experiment,
         )
     } else {
       # Ran DAA, take test results.
-      tab <- daa[[feature_name]]
+      tab <- daa[[feature_id_long]]
       tab <- tab[, c("CellSubset", "logFC", "FDR")]
     }
-    
+
     colnames(tab) <-
       c("CellSubset",
         paste0(feature_name, "_logFC"),
