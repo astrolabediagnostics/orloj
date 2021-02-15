@@ -360,14 +360,6 @@ experimentMds <- function(experiment,
   mds
 }
 
-
-#' Experiment Assignment labeling strategy.
-#'
-#' Return a user-readable table of the labeling strategy for the Assignment
-#' level.
-#' @param experiment An Astrolabe experiment.
-#' @return User-readable table of the experiment hierarchy.
-#' @export
 experimentLabelingStrategy <- function(experiment) {
   if (experiment$organism == "profiling_only") return(NULL)
   
@@ -426,6 +418,16 @@ experimentLabelingStrategy <- function(experiment) {
   hierarchy <- hierarchy[hierarchy$CellSubset == cell_subset, ]
   channels <-
     intersect(class_channels, names(which(colSums(!is.na(hierarchy)) > 0)))
+  
+  # Unassigned cell subset with no markers (neither positive nor negative).
+  if (length(channels) == 0) {
+    return(data.frame(
+      CellSubset = cell_subset,
+      Channel = "(unassigned)",
+      State = NA
+    ))
+  }
+  
   hierarchy <- hierarchy[, channels, drop = FALSE]
   hierarchy$CellSubset <- cell_subset
   ch <-
@@ -439,17 +441,21 @@ experimentLabelingStrategy <- function(experiment) {
   # Get data frame with state of each channel for given subset, spanning the
   # entire hierarchy.
   df <- data.frame()
-  while (cell_subset != "Root" && cell_subset != "Granulocyte") {
+  while (cell_subset %in% hierarchy$CellSubset) {
+    # Reverse compatibility: Before the addition of support for labeling
+    # unassigned subsets, parents were allowed to include "_unassigned".
     cell_subset <- gsub("_unassigned", "", cell_subset)
     df <- rbind(.getSubsetChannels(hierarchy, class_channels, cell_subset), df)
-    cell_subset <- hierarchy$Parent[hierarchy$CellSubset == cell_subset]
+    cell_subset <- subset(hierarchy, CellSubset == cell_subset)$Parent
   }
   df
 }
 
 .convertChannelsToDesc <- function(channels) {
   # Convert channels data frame to a string.
-  channels$StateStr <- ifelse(channels$State, "+", "-")
+  channels$StateStr <-
+    ifelse(is.na(channels$State), "",
+           ifelse(channels$State, "+", "-"))
   # Use factors to maintain subset order.
   channels$CellSubset <-
     factor(channels$CellSubset, levels = unique(channels$CellSubset))
