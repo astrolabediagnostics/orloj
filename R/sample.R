@@ -261,12 +261,11 @@ fcsExprs <- function(sample,
 sampleCellSubsetCounts <- function(sample, level = "Assignment") {
   if (!isSample(sample)) stop("Expecting an Astrolabe sample")
   
-  if (!level %in% sample$aggregate_statistics$subset_cell_counts) {
-    stop("sample does not have this level")
-  }
-  
-  subset(sample$aggregate_statistics$subset_cell_counts,
-         Parent == level, select = c("CellSubset", "N"))
+  df <-
+    subset(sample$aggregate_statistics$subset_cell_counts,
+           Parent == level, select = c("CellSubset", "N"))
+  if (nrow(df) == 0) stop(paste0("sample does not have level ", level))
+  df
 }
 
 #' Cell subset channel statistics.
